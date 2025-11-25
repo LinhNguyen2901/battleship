@@ -1,9 +1,9 @@
 public class Ship 
 {
-    private int length;
-    private int hits;
-    private int startRow, startCol;
-    private boolean horizontal;
+    private int length;             // length of ship
+    private int hits;               // number of times ship has been hit
+    private int startRow, startCol; // row and column where ship begins
+    private boolean horizontal;     // stores if ship is placed horizontally or vertically
 
     public Ship(int l, int r, int c, boolean h) 
     {
@@ -18,7 +18,23 @@ public class Ship
     {
          hits++; 
     }
-    public boolean isSunk() 
+    public int getLength()
+    {
+        return length;
+    }
+    public boolean isHorizontal()
+    {
+        return horizontal==true;
+    }
+    public int getStartRow()
+    {
+        return startRow;
+    }
+    public int getStartCol()
+    {
+        return startCol;
+    }
+    public boolean isSunk() // returns if all coordinates of ship have been hit
     { 
         return hits >= length; 
     }

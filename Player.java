@@ -2,55 +2,51 @@ import java.util.ArrayList;
 import java.util.Random;
 
 abstract class Player {
-    protected ArrayList<Ship> ships = new ArrayList<>();
+    protected ArrayList<Ship> ships = new ArrayList<Ship>();
     protected Board board = new Board();
-    protected Random rand = new Random();
+    private Random rand = new Random();
 
-    public Board getBoard() { return board; }
-
-    public void addShip(Ship s) { ships.add(s); }
-
-    // Return a board for the opponent (hide unhit ships)
-    public Board getBoardForOpponent() {
-        Board masked = new Board();
-        for (int r = 0; r < Board.SIZE; r++) {
-            for (int c = 0; c < Board.SIZE; c++) {
-                char val = board.get(r, c);
-                if (val == 'H' || val == 'M') masked.set(r, c, val);
-                else masked.set(r, c, ' ');
-            }
-        }
-        return masked;
+    public Board getBoard() 
+    { 
+        return board;
     }
 
-    // Place a ship randomly ensuring no touching (including diagonals)
-    protected void placeShipRandomly(int length) {
+    // Return a board for the opponent (shows hits, misses, and destroy)
+    public char[][] getBoardForOpponent() 
+    {
+        return board.getInfoGrid();
+    }
+
+    public void addShip(Ship s) // adds ship to arrayList
+    { 
+        ships.add(s); 
+    }
+
+    protected void placeShipAutomatically(int length) // places a ship randomly
+    {
         boolean placed = false;
-        while (!placed) {
-            boolean horizontal = rand.nextBoolean();
-            int r = rand.nextInt(Board.SIZE);
-            int c = rand.nextInt(Board.SIZE);
-            if (canPlaceShipNoTouch(r, c, length, horizontal)) {
-                board.placeShip(r, c, length, horizontal);
-                ships.add(new Ship(length, r, c, horizontal));
+        while (!placed) 
+        {
+            boolean horizontal = rand.nextBoolean(); // randomly chooses if horizontal
+            int r = rand.nextInt(Board.SIZE);        // randomly chooses row
+            int c = rand.nextInt(Board.SIZE);        // randomly chooses column
+            if (board.canPlaceShip(r, c, length, horizontal)) // checks if ship would stay in bounds if placed there
+            {
+                board.placeShip(r, c, length, horizontal);      // updates shipGrid array
                 placed = true;
+                Ship s = new Ship(length, r, c, horizontal);
+                ships.add(s);                                   // adds ship to arrayList
             }
         }
     }
-
-    private boolean canPlaceShipNoTouch(int r, int c, int length, boolean horizontal) {
-        for (int i = -1; i <= length; i++) {
-            for (int dr = -1; dr <= 1; dr++) {
-                for (int dc = -1; dc <= 1; dc++) {
-                    int rr = r + (horizontal ? dr : i + dr);
-                    int cc = c + (horizontal ? i + dc : dc);
-                    if (board.inBounds(rr, cc) && board.get(rr, cc) == 'S') return false;
-                }
-            }
+    public void placeShipsAutomatically() 
+    {
+        int[] shipSizes = {5, 4, 3, 3, 2}; // every user has 5 ships, this lists their sizes
+        for (int size : shipSizes) 
+        {
+            placeShipAutomatically(size); // place each ship of size in shipSizes array
         }
-        return board.canPlaceShip(r, c, length, horizontal);
     }
 
-    public abstract void placeShipsAutomatically();
-    public abstract int[] chooseShot();
+    public abstract int[] chooseShot(char [][] opponentBoard); // humanPlayer and ComputerPlayer implement this
 }
