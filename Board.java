@@ -164,4 +164,14 @@ public class Board {
         }
         return true;
     }
+    
+    // Reset board (for new game)
+    public void reset() {
+        for (char[] row : infoGrid) {
+            Arrays.fill(row, ' ');
+        }
+        for (char[] row : shipGrid) {
+            Arrays.fill(row, ' ');
+        }
+    }
 }

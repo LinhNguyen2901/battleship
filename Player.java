@@ -48,5 +48,15 @@ abstract class Player {
         }
     }
 
-    public abstract int[] chooseShot(char [][] opponentBoard); // humanPlayer and ComputerPlayer implement this
+    public ArrayList<Ship> getShips() {
+        return ships;
+    }
+    
+    // Reset player
+    public void reset() {
+        ships.clear();
+        board.reset();
+    }
+
+    public abstract int[] chooseShot(char [][] opponentBoard); 
 }
