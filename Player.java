@@ -1,7 +1,8 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 
-abstract class Player {
+abstract class Player implements Serializable{
     protected ArrayList<Ship> ships = new ArrayList<Ship>();
     protected Board board = new Board();
     private Random rand = new Random();

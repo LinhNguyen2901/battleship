@@ -1,4 +1,6 @@
-public class GameController {
+import java.io.Serializable;
+
+public class GameController implements Serializable {
 
     private Player player1;
     private Player player2;

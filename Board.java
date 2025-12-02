@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class Board {
+public class Board implements Serializable{
     public static final int SIZE = 10;
     private char[][] infoGrid; // ' ' empty, 'H' hit, 'M' miss, 'D' destroy // what oppponent sees
     private char[][] shipGrid; // ' ' empty, 'S' ship // what player sees

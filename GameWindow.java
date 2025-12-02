@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
+import java.io.*;
 
 public class GameWindow extends JFrame {
 
@@ -49,15 +50,29 @@ public class GameWindow extends JFrame {
 
         add(boardsPanel, BorderLayout.CENTER);
 
-        // Bottom panel: new game button
+        // Bottom panel: buttons
         JPanel bottomPanel = new JPanel(new FlowLayout());
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JButton saveButton = new JButton("Save Game");
+        saveButton.setFont(new Font("Arial", Font.BOLD, 14));
+        saveButton.setPreferredSize(new Dimension(120, 35));
+        saveButton.addActionListener(e -> saveGame());
+        
+        JButton loadButton = new JButton("Load Game");
+        loadButton.setFont(new Font("Arial", Font.BOLD, 14));
+        loadButton.setPreferredSize(new Dimension(120, 35));
+        loadButton.addActionListener(e -> loadGame());
+        
         switchButton = new JButton("New Game");
         switchButton.setFont(new Font("Arial", Font.BOLD, 16));
         switchButton.setPreferredSize(new Dimension(150, 40));
         switchButton.setEnabled(true); 
         switchButton.setVisible(true); 
         switchButton.addActionListener(e -> restartGame());
+        
+        bottomPanel.add(saveButton);
+        bottomPanel.add(loadButton);
         bottomPanel.add(switchButton);
         add(bottomPanel, BorderLayout.SOUTH);
 
@@ -65,6 +80,182 @@ public class GameWindow extends JFrame {
         updateStatus();
     }
 
+    private void saveGame() {
+        try {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Game");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Battleship Save Files", "bsg"));
+            
+            int userSelection = fileChooser.showSaveDialog(this);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                String filePath = fileToSave.getAbsolutePath();
+                if (!filePath.endsWith(".bsg")) {
+                    filePath += ".bsg";
+                }
+                
+                PrintWriter writer = new PrintWriter(new FileWriter(filePath));
+                
+                // Save current player (1 or 2)
+                int currentPlayerNum = (controller.getCurrentPlayer() == controller.getPlayer1()) ? 1 : 2;
+                writer.println("CURRENT_PLAYER:" + currentPlayerNum);
+                
+                // Save Player 1
+                savePlayerState(writer, controller.getPlayer1(), 1);
+                
+                // Save Player 2
+                savePlayerState(writer, controller.getPlayer2(), 2);
+                
+                writer.close();
+                JOptionPane.showMessageDialog(this, "Game saved successfully!");
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error saving game: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void savePlayerState(PrintWriter writer, Player player, int playerNum) {
+        writer.println("PLAYER_" + playerNum + "_START");
+        
+        // Save ships
+        writer.println("SHIPS_COUNT:" + player.getShips().size());
+        for (Ship ship : player.getShips()) {
+            writer.println("SHIP:" + ship.getLength() + "," + ship.getStartRow() + "," + 
+                          ship.getStartCol() + "," + ship.isHorizontal() + "," + ship.getHits());
+        }
+        
+        // Save shipGrid
+        writer.println("SHIPGRID_START");
+        char[][] shipGrid = player.getBoard().getShipGrid();
+        for (int r = 0; r < 10; r++) {
+            StringBuilder row = new StringBuilder();
+            for (int c = 0; c < 10; c++) {
+                row.append(shipGrid[r][c]);
+            }
+            writer.println(row.toString());
+        }
+        
+        // Save infoGrid
+        writer.println("INFOGRID_START");
+        char[][] infoGrid = player.getBoard().getInfoGrid();
+        for (int r = 0; r < 10; r++) {
+            StringBuilder row = new StringBuilder();
+            for (int c = 0; c < 10; c++) {
+                row.append(infoGrid[r][c]);
+            }
+            writer.println(row.toString());
+        }
+        
+        writer.println("PLAYER_" + playerNum + "_END");
+    }
+    
+    private void loadGame() {
+        try {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Load Game");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Battleship Save Files", "bsg"));
+            
+            int userSelection = fileChooser.showOpenDialog(this);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToLoad = fileChooser.getSelectedFile();
+                BufferedReader reader = new BufferedReader(new FileReader(fileToLoad));
+                
+                // Reset both players first
+                controller.getPlayer1().reset();
+                controller.getPlayer2().reset();
+                
+                String line;
+                int currentPlayerNum = 1;
+                
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("CURRENT_PLAYER:")) {
+                        currentPlayerNum = Integer.parseInt(line.substring("CURRENT_PLAYER:".length()));
+                    } else if (line.equals("PLAYER_1_START")) {
+                        loadPlayerState(reader, controller.getPlayer1());
+                    } else if (line.equals("PLAYER_2_START")) {
+                        loadPlayerState(reader, controller.getPlayer2());
+                    }
+                }
+                
+                reader.close();
+                
+                // Set current player
+                while (controller.getCurrentPlayer() != (currentPlayerNum == 1 ? controller.getPlayer1() : controller.getPlayer2())) {
+                    controller.switchPlayers();
+                }
+                
+                // Reset all buttons
+                for (int r = 0; r < 10; r++) {
+                    for (int c = 0; c < 10; c++) {
+                        myBoardPanel.buttons[r][c].ship = null;
+                        myBoardPanel.buttons[r][c].shipIndex = -1;
+                        myBoardPanel.buttons[r][c].isHit = false;
+                        opponentBoardPanel.buttons[r][c].ship = null;
+                        opponentBoardPanel.buttons[r][c].shipIndex = -1;
+                        opponentBoardPanel.buttons[r][c].isHit = false;
+                    }
+                }
+                
+                // Update boards
+                myBoardPanel.updateBoard();
+                opponentBoardPanel.updateBoard();
+                opponentBoardPanel.setEnabled(true);
+                updateStatus();
+                
+                JOptionPane.showMessageDialog(this, "Game loaded successfully!");
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error loading game: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error loading game: Invalid file format", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void loadPlayerState(BufferedReader reader, Player player) throws IOException {
+        String line;
+        
+        // Load ships
+        line = reader.readLine();
+        int shipsCount = Integer.parseInt(line.substring("SHIPS_COUNT:".length()));
+        for (int i = 0; i < shipsCount; i++) {
+            line = reader.readLine();
+            String[] parts = line.substring("SHIP:".length()).split(",");
+            int length = Integer.parseInt(parts[0]);
+            int row = Integer.parseInt(parts[1]);
+            int col = Integer.parseInt(parts[2]);
+            boolean horizontal = Boolean.parseBoolean(parts[3]);
+            int hits = Integer.parseInt(parts[4]);
+            
+            // Place ship on board
+            player.getBoard().placeShip(row, col, length, horizontal);
+            Ship ship = new Ship(length, row, col, horizontal);
+            ship.setHits(hits);
+            player.addShip(ship);
+        }
+        
+        // Load shipGrid
+        line = reader.readLine(); // "SHIPGRID_START"
+        char[][] shipGrid = player.getBoard().getShipGrid();
+        for (int r = 0; r < 10; r++) {
+            line = reader.readLine();
+            for (int c = 0; c < 10; c++) {
+                shipGrid[r][c] = line.charAt(c);
+            }
+        }
+        
+        // Load infoGrid
+        line = reader.readLine(); // "INFOGRID_START"
+        char[][] infoGrid = player.getBoard().getInfoGrid();
+        for (int r = 0; r < 10; r++) {
+            line = reader.readLine();
+            for (int c = 0; c < 10; c++) {
+                infoGrid[r][c] = line.charAt(c);
+            }
+        }
+        
+        reader.readLine(); // "PLAYER_X_END"
+    }
+    
     private void restartGame() {
         // Reset both players for a new game
         controller.getPlayer1().reset();
