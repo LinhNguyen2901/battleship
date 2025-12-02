@@ -1,4 +1,6 @@
-public class Ship 
+import java.io.Serializable;
+
+public class Ship implements Serializable
 {
     private int length;             // length of ship
     private int hits;               // number of times ship has been hit
@@ -37,6 +39,14 @@ public class Ship
     public boolean isSunk() // returns if all coordinates of ship have been hit
     { 
         return hits >= length; 
+    }
+    
+    public int getHits() {
+        return hits;
+    }
+    
+    public void setHits(int h) {
+        hits = h;
     }
 
     public boolean occupies(int r, int c) // see if a ship is on this cell
