@@ -72,4 +72,10 @@ public class GameController implements Serializable {
         currentPlayer = opponent;
         opponent = temp;
     }
+
+    public void setPlayers(Player p1, Player p2) {
+        this.player1 = p1;
+        this.player2 = p2;
+        this.currentPlayer = p1; 
+    }
 }

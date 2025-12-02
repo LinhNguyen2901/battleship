@@ -37,7 +37,7 @@ public class GameWindow extends JFrame {
         // Left board: ship board of the current player
         JPanel leftPanel = new JPanel(new BorderLayout());
         JLabel myBoardLabel = new JLabel("Your Ships", SwingConstants.CENTER);
-        myBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); // 24 = bigger size
+        myBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); 
         leftPanel.add(myBoardLabel, BorderLayout.NORTH);
         myBoardPanel = new BoardPanel(controller, true); // true = player's ship board
         leftPanel.add(myBoardPanel, BorderLayout.CENTER);
@@ -46,7 +46,7 @@ public class GameWindow extends JFrame {
         // Right board: guess board
         JPanel rightPanel = new JPanel(new BorderLayout());
         JLabel opponentBoardLabel = new JLabel("Opponent Board (Click to shoot)", SwingConstants.CENTER);
-        opponentBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); // increase size as needed
+        opponentBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); 
         rightPanel.add(opponentBoardLabel, BorderLayout.NORTH);
         opponentBoardPanel = new BoardPanel(controller, false); // false = opponent guess board
         rightPanel.add(opponentBoardPanel, BorderLayout.CENTER);
@@ -69,8 +69,8 @@ public class GameWindow extends JFrame {
         loadButton.addActionListener(e -> loadGame());
         
         switchButton = new JButton("New Game");
-        switchButton.setFont(new Font("Arial", Font.BOLD, 16));
-        switchButton.setPreferredSize(new Dimension(150, 40));
+        switchButton.setFont(new Font("Arial", Font.BOLD, 14));
+        switchButton.setPreferredSize(new Dimension(120, 35));
         switchButton.setEnabled(true); 
         switchButton.setVisible(true); 
         switchButton.addActionListener(e -> restartGame());
