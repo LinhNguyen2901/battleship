@@ -23,9 +23,9 @@ public class GameWindow extends JFrame {
         // Top panel: player info, ships, remaining ships
         JPanel topPanel = new JPanel(new BorderLayout());
         statusLabel = new JLabel("", SwingConstants.CENTER);
-        statusLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 22));
         shipsInfoLabel = new JLabel("", SwingConstants.CENTER);
-        shipsInfoLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        shipsInfoLabel.setFont(new Font("Arial", Font.PLAIN, 18));
         topPanel.add(statusLabel, BorderLayout.NORTH);
         topPanel.add(shipsInfoLabel, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
@@ -36,14 +36,18 @@ public class GameWindow extends JFrame {
         
         // Left board: ship board of the current player
         JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(new JLabel("Your Ships", SwingConstants.CENTER), BorderLayout.NORTH);
+        JLabel myBoardLabel = new JLabel("Your Ships", SwingConstants.CENTER);
+        myBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); // 24 = bigger size
+        leftPanel.add(myBoardLabel, BorderLayout.NORTH);
         myBoardPanel = new BoardPanel(controller, true); // true = player's ship board
         leftPanel.add(myBoardPanel, BorderLayout.CENTER);
         boardsPanel.add(leftPanel);
 
         // Right board: guess board
         JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.add(new JLabel("Opponent Board (Click to shoot)", SwingConstants.CENTER), BorderLayout.NORTH);
+        JLabel opponentBoardLabel = new JLabel("Opponent Board (Click to shoot)", SwingConstants.CENTER);
+        opponentBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); // increase size as needed
+        rightPanel.add(opponentBoardLabel, BorderLayout.NORTH);
         opponentBoardPanel = new BoardPanel(controller, false); // false = opponent guess board
         rightPanel.add(opponentBoardPanel, BorderLayout.CENTER);
         boardsPanel.add(rightPanel);
@@ -385,6 +389,7 @@ public class GameWindow extends JFrame {
                 String result = controller.takeTurn();
                 
                 char[][] updatedView = targetOpponent.getBoardForOpponent();
+                boolean sunk = updatedView[r][c] == 'D';
                 boolean hit = updatedView[r][c] == 'H' || updatedView[r][c] == 'D';
                 
                 // If hit, update board display
@@ -405,8 +410,23 @@ public class GameWindow extends JFrame {
                         "Player " + (controller.getCurrentPlayer() == controller.getPlayer1() ? 1 : 2) + " WINS!");
                 } else {
                     // Show hit/miss popup
-                    String message = hit ? "HIT!" : "MISS!";
-                    JOptionPane.showMessageDialog(GameWindow.this, message);
+                    String message;
+                    if (sunk)
+                        message = "You sink a ship!";
+                    else if (hit)
+                        message = "Hit!";
+                    else
+                        message = "Miss!";
+                    JOptionPane.showOptionDialog(
+                        this,
+                        message,
+                        "Result",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null,
+                        new Object[]{"Switch Player"},   // <-- custom button text
+                        "Switch Player"
+                    );
                     
                     // After OK, update both boards for next player's view
                     myBoardPanel.updateBoard();
@@ -484,7 +504,7 @@ public class GameWindow extends JFrame {
                                 break;
                             case 'D':
                                 btn.isHit = true;
-                                btn.setBackground(new Color(255, 200, 200)); // light red, same as hit
+                                btn.setBackground(new Color(255, 120, 120)); // light red, same as hit
                                 break;
                             default:
                                 btn.isHit = false;
