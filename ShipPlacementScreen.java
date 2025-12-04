@@ -62,7 +62,7 @@ public class ShipPlacementScreen extends JFrame
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        JLabel instructionLabel = new JLabel("Drag ships from the right panel onto the board. Right-click to rotate.", SwingConstants.CENTER);
+        JLabel instructionLabel = new JLabel("Drag ships from the right panel onto the board. Use rotate buttons to change orientation.", SwingConstants.CENTER);
         instructionLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         
         topPanel.add(titleLabel, BorderLayout.NORTH);
@@ -251,21 +251,17 @@ public class ShipPlacementScreen extends JFrame
             }
             
             @Override
-            protected void paintComponent(Graphics g) 
-            {
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 
                 // Draw placed ships as colored circles
-                if (board.getShipCoord(row, col) == 'S') 
-                {
+                if (board.getShipCoord(row, col) == 'S') {
                     // Find which ship occupies this cell
                     int shipIndex = -1;
-                    for (int i = 0; i < ships.size(); i++)
-                    {
-                        if (ships.get(i).occupies(row, col)) 
-                        {
+                    for (int i = 0; i < ships.size(); i++) {
+                        if (ships.get(i).occupies(row, col)) {
                             shipIndex = i;
                             break;
                         }
@@ -280,34 +276,28 @@ public class ShipPlacementScreen extends JFrame
                 }
                 
                 // Show preview while dragging a ship
-                if (draggedShip != null && draggedShip.isBeingDragged) 
-                {
+                if (draggedShip != null && draggedShip.isBeingDragged) {
                     Point boardMouse = BoardPanel.this.getMousePosition();
-                    if (boardMouse != null) 
-                    {
+                    if (boardMouse != null) {
                         Component hoverComp = BoardPanel.this.getComponentAt(boardMouse);
-                        if (hoverComp instanceof CellButton) 
-                        {
+                        if (hoverComp instanceof CellButton) {
                             CellButton hoverCell = (CellButton) hoverComp;
                             boolean canPlace = board.canPlaceShip(hoverCell.row, hoverCell.col, 
                                                                   draggedShip.length, draggedShip.horizontal);
                             
                             // Check if THIS cell is part of the preview
                             boolean isPreviewCell = false;
-                            for (int i = 0; i < draggedShip.length; i++) 
-                            {
+                            for (int i = 0; i < draggedShip.length; i++) {
                                 int previewRow = draggedShip.horizontal ? hoverCell.row : hoverCell.row + i;
                                 int previewCol = draggedShip.horizontal ? hoverCell.col + i : hoverCell.col;
-                                if (previewRow == this.row && previewCol == this.col) 
-                                {
+                                if (previewRow == this.row && previewCol == this.col) {
                                     isPreviewCell = true;
                                     break;
                                 }
                             }
                             
                             // Draw green for valid placement, red for invalid
-                            if (isPreviewCell) 
-                            {
+                            if (isPreviewCell) {
                                 g2d.setColor(canPlace ? new Color(100, 255, 100, 100) : new Color(255, 100, 100, 100));
                                 g2d.fillRect(0, 0, getWidth(), getHeight());
                             }
@@ -316,14 +306,14 @@ public class ShipPlacementScreen extends JFrame
                 }
             }
         }
-    } //  End of BoardPanel class
+    }
     
     /**
      * Panel displaying draggable ship components that can be placed on the board
      */
     private class ShipSelectionPanel extends JPanel 
     {
-        private ArrayList<DraggableShipComponent> draggableShips;
+        private ArrayList<ShipContainer> shipContainers;
         
         public ShipSelectionPanel() 
         {
@@ -331,19 +321,19 @@ public class ShipPlacementScreen extends JFrame
             setBorder(BorderFactory.createTitledBorder("Ships to Place"));
             setPreferredSize(new Dimension(220, 600));
             
-            draggableShips = new ArrayList<>();
+            shipContainers = new ArrayList<>();
             
-            // Create draggable ship component for each ship
+            // Create container for each ship with rotate button
             for (int i = 0; i < shipSizes.length; i++) 
             {
-                DraggableShipComponent ship = new DraggableShipComponent(
-                    shipSizes[i], shipNames[i], shipColors[i], this
+                ShipContainer container = new ShipContainer(
+                    shipSizes[i], shipNames[i], shipColors[i]
                 );
-                ship.setMaximumSize(new Dimension(200, 80));
-                ship.setAlignmentX(Component.LEFT_ALIGNMENT);
-                draggableShips.add(ship);
-                add(ship);
-                add(Box.createVerticalStrut(10));
+                container.setMaximumSize(new Dimension(200, 100));
+                container.setAlignmentX(Component.LEFT_ALIGNMENT);
+                shipContainers.add(container);
+                add(container);
+                add(Box.createVerticalStrut(5));
             }
         }
         
@@ -352,9 +342,9 @@ public class ShipPlacementScreen extends JFrame
          */
         public void resetShips() 
         {
-            for (DraggableShipComponent ship : draggableShips) 
+            for (ShipContainer container : shipContainers) 
             {
-                ship.reset();
+                container.ship.reset();
             }
             repaint();
         }
@@ -364,17 +354,60 @@ public class ShipPlacementScreen extends JFrame
          */
         public void allShipsPlaced() 
         {
-            for (DraggableShipComponent ship : draggableShips) 
+            for (ShipContainer container : shipContainers) 
             {
-                ship.setPlaced(true);
+                container.ship.setPlaced(true);
             }
             repaint();
         }
-    } //  End of ShipSelectionPanel class
+    }
+    
+    /**
+     * Container holding a ship and its rotate button
+     */
+    private class ShipContainer extends JPanel 
+    {
+        DraggableShipComponent ship;
+        JButton rotateBtn;
+        
+        public ShipContainer(int length, String name, Color color) 
+        {
+            setLayout(new BorderLayout());
+            setBackground(Color.WHITE);
+            setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+            
+            // Rotate button at top
+            rotateBtn = new JButton("⟳");
+            rotateBtn.setFont(new Font("Arial", Font.BOLD, 16));
+            rotateBtn.setPreferredSize(new Dimension(40, 25));
+            rotateBtn.setMargin(new Insets(0, 0, 0, 0));
+            rotateBtn.setFocusPainted(false);
+            
+            // Ship component in center
+            ship = new DraggableShipComponent(length, name, color, this);
+            
+            // Add rotate functionality
+            rotateBtn.addActionListener(e -> {
+                if (!ship.placed) {
+                    ship.horizontal = !ship.horizontal;
+                    ship.repaint();
+                    boardPanel.repaint();
+                }
+            });
+            
+            // Layout
+            JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 2));
+            topPanel.setOpaque(false);
+            topPanel.add(rotateBtn);
+            
+            add(topPanel, BorderLayout.NORTH);
+            add(ship, BorderLayout.CENTER);
+        }
+    }
     
     /**
      * Component representing a draggable ship that can be placed on the board
-     * Supports drag-and-drop and right-click rotation
+     * Supports drag-and-drop
      */
     private class DraggableShipComponent extends JPanel 
     {
@@ -385,15 +418,13 @@ public class ShipPlacementScreen extends JFrame
         boolean placed = false;
         boolean isBeingDragged = false;
         
-        public DraggableShipComponent(int l, String n, Color c, ShipSelectionPanel parent) 
+        public DraggableShipComponent(int l, String n, Color c, ShipContainer parent) 
         {
             length = l;
             name = n;
             color = c;
             
             setPreferredSize(new Dimension(200, 70));
-            setMaximumSize(new Dimension(200, 70));
-            setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
             setBackground(Color.WHITE);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             
@@ -405,18 +436,9 @@ public class ShipPlacementScreen extends JFrame
                 {
                     if (!placed) 
                     {
-                        // Right-click rotates the ship
-                        if (SwingUtilities.isRightMouseButton(e))
-                        {
-                            horizontal = !horizontal;
-                            repaint();
-                        } 
-                        else 
-                        {
-                            // Left-click starts dragging
-                            isBeingDragged = true;
-                            boardPanel.draggedShip = DraggableShipComponent.this;
-                        }
+                        // Left-click starts dragging
+                        isBeingDragged = true;
+                        boardPanel.draggedShip = DraggableShipComponent.this;
                     }
                 }
                 
@@ -435,6 +457,7 @@ public class ShipPlacementScreen extends JFrame
                         if (boardPanel.tryPlaceShip(DraggableShipComponent.this, panelPoint)) 
                         {
                             placed = true;
+                            parent.rotateBtn.setEnabled(false);
                         }
                         
                         boardPanel.draggedShip = null;
@@ -517,5 +540,5 @@ public class ShipPlacementScreen extends JFrame
                 }
             }
         }
-    } 
-} 
+    }
+}
