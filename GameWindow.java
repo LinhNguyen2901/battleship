@@ -420,6 +420,10 @@ public class GameWindow extends JFrame {
                 boolean sunk = updatedView[r][c] == 'D';
                 boolean hit = updatedView[r][c] == 'H' || updatedView[r][c] == 'D';
                 
+                controller.switchPlayers();
+                opponentBoardPanel.updateBoard();
+                controller.switchPlayers();
+                
                 // Display result message
                 if (result.equals("gameOver")) {
                     myBoardPanel.updateBoard();
@@ -472,6 +476,7 @@ public class GameWindow extends JFrame {
                         btn.ship = null;
                         btn.shipIndex = -1;
                         btn.isHit = false;
+                        btn.isOpponentShot = false;
                         btn.setBackground(Color.WHITE);
                     }
                 }
@@ -497,6 +502,17 @@ public class GameWindow extends JFrame {
                     }
                 }
                 
+                // Mark opponent shots on our board
+                char[][] opponentGuesses = current.getBoard().getInfoGrid();
+                for (int r = 0; r < 10; r++) {
+                    for (int c = 0; c < 10; c++) {
+                        char cell = opponentGuesses[r][c];
+                        if (cell == 'H' || cell == 'M' || cell == 'D') {
+                            buttons[r][c].isOpponentShot = true;
+                        }
+                    }
+                }
+                
                 // Repaint all buttons
                 for (int r = 0; r < 10; r++) {
                     for (int c = 0; c < 10; c++) {
@@ -512,10 +528,12 @@ public class GameWindow extends JFrame {
                         char cell = view[r][c];
                         btn.ship = null;
                         btn.shipIndex = -1;
+                        btn.isHitMarked = false;
                         
                         switch (cell) {
                             case 'H':
                                 btn.isHit = true;
+                                btn.isHitMarked = true;
                                 btn.setBackground(new Color(255, 200, 200)); // light red
                                 break;
                             case 'M':
@@ -524,6 +542,7 @@ public class GameWindow extends JFrame {
                                 break;
                             case 'D':
                                 btn.isHit = true;
+                                btn.isHitMarked = true;
                                 btn.setBackground(new Color(255, 120, 120)); // light red, same as hit
                                 break;
                             default:
@@ -550,6 +569,8 @@ public class GameWindow extends JFrame {
         Ship ship = null;
         int shipIndex = -1;
         boolean isHit = false;
+        boolean isOpponentShot = false;  // Track opponent shots on our board
+        boolean isHitMarked = false;      // Track hits on opponent board (for drawing X)
         
         // Colors for different ships
         private Color[] shipColors = {
@@ -598,11 +619,38 @@ public class GameWindow extends JFrame {
                     g2d.drawLine(x1, y1, x2, y2);
                     g2d.drawLine(x2, y1, x1, y2);
                 }
-            } else if (isHit) {
+            } else if (isOpponentShot) {
+                // Draw opponent shots on opponent board as grey X
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setColor(Color.GRAY);
-                g2d.setStroke(new BasicStroke(1));
+                g2d.setColor(new Color(150, 150, 150));  // Grey color
+                g2d.setStroke(new BasicStroke(2));
+                int width = getWidth();
+                int height = getHeight();
+                int padding = 6;
+                g2d.drawLine(padding, padding, width - padding, height - padding);
+                g2d.drawLine(width - padding, padding, padding, height - padding);
+            }
+            
+            // Draw opponent shots on our board as grey X (my board)
+            if (isOpponentShot && ship == null) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color(150, 150, 150));  // Grey color
+                g2d.setStroke(new BasicStroke(2));
+                int width = getWidth();
+                int height = getHeight();
+                int padding = 6;
+                g2d.drawLine(padding, padding, width - padding, height - padding);
+                g2d.drawLine(width - padding, padding, padding, height - padding);
+            }
+            
+            // Draw X on opponent board when we hit
+            if (isHitMarked) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(Color.WHITE);
+                g2d.setStroke(new BasicStroke(2));
                 int width = getWidth();
                 int height = getHeight();
                 int padding = 8;
