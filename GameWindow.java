@@ -11,6 +11,7 @@ public class GameWindow extends JFrame {
     private JLabel statusLabel;
     private JLabel shipsInfoLabel;
     private JButton switchButton;
+    private JPanel boardsPanel;            // Reference to boards panel for overlay
 
     public GameWindow(GameController controller) {
         this.controller = controller;
@@ -31,7 +32,7 @@ public class GameWindow extends JFrame {
         add(topPanel, BorderLayout.NORTH);
 
         // Middle panel: boards side by side
-        JPanel boardsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+        boardsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         boardsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
         // Left board: ship board of the current player
@@ -292,6 +293,7 @@ public class GameWindow extends JFrame {
         updateStatus();
     }
 
+
     private void updateStatus() {
         Player current = controller.getCurrentPlayer();
         Player opponent = controller.getOpponent();
@@ -312,6 +314,32 @@ public class GameWindow extends JFrame {
         }
         // Enable new game button
         switchButton.setEnabled(true);
+    }
+
+    private void showSwitchPlayerScreen() {
+        SwitchPlayerScreen screen = new SwitchPlayerScreen(controller, () -> {
+            // Hide the overlay
+            JComponent glassPane = (JComponent) getGlassPane();
+            glassPane.setVisible(false);
+            myBoardPanel.setEnabled(true);
+            opponentBoardPanel.setEnabled(true);
+            myBoardPanel.updateBoard();
+            opponentBoardPanel.updateBoard();
+            updateStatus();
+        });
+        
+        // Use glass pane to overlay entire window
+        JComponent glassPane = (JComponent) getGlassPane();
+        glassPane.setLayout(new BorderLayout());
+        glassPane.removeAll();
+        glassPane.add(screen, BorderLayout.CENTER);
+        glassPane.setVisible(true);
+        glassPane.revalidate();
+        glassPane.repaint();
+        
+        // Disable interaction with main window
+        myBoardPanel.setEnabled(false);
+        opponentBoardPanel.setEnabled(false);
     }
 
     private String getShipsInfo(Player player) {
@@ -392,16 +420,8 @@ public class GameWindow extends JFrame {
                 boolean sunk = updatedView[r][c] == 'D';
                 boolean hit = updatedView[r][c] == 'H' || updatedView[r][c] == 'D';
                 
-                // If hit, update board display
-                if (hit) {
-                    controller.switchPlayers(); 
-                    opponentBoardPanel.updateBoard();
-                    controller.switchPlayers();
-                }
-                
                 // Display result message
                 if (result.equals("gameOver")) {
-                    controller.switchPlayers();
                     myBoardPanel.updateBoard();
                     opponentBoardPanel.updateBoard();
                     opponentBoardPanel.setEnabled(false);
@@ -417,21 +437,21 @@ public class GameWindow extends JFrame {
                         message = "Hit!";
                     else
                         message = "Miss!";
-                    JOptionPane.showOptionDialog(
+                    int choice = JOptionPane.showOptionDialog(
                         this,
                         message,
                         "Result",
                         JOptionPane.DEFAULT_OPTION,
                         JOptionPane.INFORMATION_MESSAGE,
                         null,
-                        new Object[]{"Switch Player"},   // <-- custom button text
-                        "Switch Player"
+                        new Object[]{"OK"},
+                        "OK"
                     );
-                    
-                    // After OK, update both boards for next player's view
-                    myBoardPanel.updateBoard();
-                    opponentBoardPanel.updateBoard();
-                    updateStatus();
+
+                    if (choice == 0) {
+                        // Show switch player screen with button to continue
+                        showSwitchPlayerScreen();
+                    }
                 }
             }
         }
