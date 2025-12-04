@@ -75,7 +75,13 @@ public class GameWindow extends JFrame {
         switchButton.setEnabled(true); 
         switchButton.setVisible(true); 
         switchButton.addActionListener(e -> restartGame());
-        
+
+        JButton homeButton = new JButton("Home");
+        homeButton.setFont(new Font("Arial", Font.BOLD, 14));
+        homeButton.setPreferredSize(new Dimension(120, 35));
+        homeButton.addActionListener(e -> goHome());
+
+        bottomPanel.add(homeButton);
         bottomPanel.add(saveButton);
         bottomPanel.add(loadButton);
         bottomPanel.add(switchButton);
@@ -84,6 +90,15 @@ public class GameWindow extends JFrame {
         setLocationRelativeTo(null); // center window
         updateStatus();
     }
+
+    private void goHome() {
+        // Close current game window
+        this.dispose();
+
+        // Show your start screen again
+        new StartScreen();   // ⬅️ change to your actual start menu class
+    }
+
 
     private void saveGame() {
         try {
@@ -304,7 +319,7 @@ public class GameWindow extends JFrame {
 
         // Check win/lose
         if (opponent.getBoard().allShipsSunk(opponent.getShips())) {
-            statusLabel.setText("Player " + currentPlayerNumber + " WINS!");
+            statusLabel.setText("🎉 Congratulations! You Win! 🎉");
             shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Remaining: " + myShipsRemaining);
             opponentBoardPanel.setEnabled(false);
         } else {
@@ -659,6 +674,8 @@ public class GameWindow extends JFrame {
             }
         }
     }
+
+    
 
     public static void main(String[] args) {
         Player p1 = new HumanPlayer();
