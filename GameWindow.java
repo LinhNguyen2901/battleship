@@ -56,34 +56,30 @@ public class GameWindow extends JFrame {
         add(boardsPanel, BorderLayout.CENTER);
 
         // Bottom panel: buttons
-        JPanel bottomPanel = new JPanel(new FlowLayout());
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        JButton saveButton = new JButton("Save Game");
-        saveButton.setFont(new Font("Arial", Font.BOLD, 14));
-        saveButton.setPreferredSize(new Dimension(120, 35));
-        saveButton.addActionListener(e -> saveGame());
-        
-        JButton loadButton = new JButton("Load Game");
-        loadButton.setFont(new Font("Arial", Font.BOLD, 14));
-        loadButton.setPreferredSize(new Dimension(120, 35));
-        loadButton.addActionListener(e -> loadGame());
-        
-        switchButton = new JButton("New Game");
-        switchButton.setFont(new Font("Arial", Font.BOLD, 14));
-        switchButton.setPreferredSize(new Dimension(120, 35));
-        switchButton.setEnabled(true); 
-        switchButton.setVisible(true); 
-        switchButton.addActionListener(e -> restartGame());
-        
-        bottomPanel.add(saveButton);
-        bottomPanel.add(loadButton);
-        bottomPanel.add(switchButton);
-        add(bottomPanel, BorderLayout.SOUTH);
+        ButtonPanel buttonPanel = new ButtonPanel(
+                e -> goHome(),
+                e -> restartGame(),
+                e -> saveGame(),
+                e -> loadGame()
+        );
+
+        // Keep reference to "New Game" button if needed
+        this.switchButton = buttonPanel.newGameButton;
+
+        add(buttonPanel, BorderLayout.SOUTH);
 
         setLocationRelativeTo(null); // center window
         updateStatus();
     }
+
+    private void goHome() {
+        // Close current game window
+        this.dispose();
+
+        // Show your start screen again
+        new StartScreen();   // ⬅️ change to your actual start menu class
+    }
+
 
     private void saveGame() {
         try {
@@ -304,7 +300,7 @@ public class GameWindow extends JFrame {
 
         // Check win/lose
         if (opponent.getBoard().allShipsSunk(opponent.getShips())) {
-            statusLabel.setText("Player " + currentPlayerNumber + " WINS!");
+            statusLabel.setText("🎉 Congratulations! You Win! 🎉");
             shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Remaining: " + myShipsRemaining);
             opponentBoardPanel.setEnabled(false);
         } else {
@@ -659,6 +655,8 @@ public class GameWindow extends JFrame {
             }
         }
     }
+
+    
 
     public static void main(String[] args) {
         Player p1 = new HumanPlayer();
