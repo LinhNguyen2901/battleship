@@ -346,66 +346,6 @@ public class GameWindow extends JFrame {
         }
     }
 
-    // Show a full-screen overlay displaying an image scaled to the application window.
-    private void showFullScreenOverlay(Image image, int delayMs, Runnable onComplete) {
-        if (image == null) {
-            showFullScreenOverlay("", delayMs, onComplete);
-            return;
-        }
-
-        final JFrame owner = this;
-        try {
-            Point loc = owner.getLocationOnScreen();
-            Dimension size = owner.getSize();
-
-            owner.setEnabled(false);
-
-            final JWindow overlay = new JWindow(owner);
-            overlay.setBackground(Color.BLACK);
-
-            Image scaled = image.getScaledInstance(size.width, size.height, Image.SCALE_SMOOTH);
-            JLabel imgLabel = new JLabel(new ImageIcon(scaled));
-            imgLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            // ensure background behind image is black
-            JPanel holder = new JPanel(new BorderLayout());
-            holder.setBackground(Color.BLACK);
-            holder.add(imgLabel, BorderLayout.CENTER);
-
-            overlay.getContentPane().add(holder);
-            overlay.setBounds(loc.x, loc.y, size.width, size.height);
-            overlay.setAlwaysOnTop(true);
-            overlay.setFocusableWindowState(false);
-            overlay.validate(); overlay.repaint(); overlay.setVisible(true);
-
-            javax.swing.Timer timer = new javax.swing.Timer(delayMs, e -> {
-                overlay.setVisible(false);
-                overlay.dispose();
-                owner.setEnabled(true);
-                if (onComplete != null) SwingUtilities.invokeLater(onComplete);
-            });
-            timer.setRepeats(false);
-            timer.start();
-        } catch (IllegalComponentStateException ex) {
-            // fallback to glass pane: scale image to glass pane size
-            final JComponent glass = (JComponent) owner.getGlassPane();
-            glass.setLayout(new BorderLayout());
-            glass.removeAll();
-            JPanel panel = new JPanel(new BorderLayout());
-            panel.setBackground(Color.BLACK);
-            int w = owner.getWidth();
-            int h = owner.getHeight();
-            Image scaled = image.getScaledInstance(Math.max(1,w), Math.max(1,h), Image.SCALE_SMOOTH);
-            JLabel imgLabel = new JLabel(new ImageIcon(scaled));
-            imgLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            panel.add(imgLabel, BorderLayout.CENTER);
-            glass.add(panel, BorderLayout.CENTER);
-            glass.setVisible(true);
-            javax.swing.Timer timer = new javax.swing.Timer(delayMs, e -> {
-                glass.setVisible(false); glass.removeAll(); owner.setEnabled(true); if (onComplete!=null) SwingUtilities.invokeLater(onComplete);
-            });
-            timer.setRepeats(false); timer.start();
-        }
-    }
 
     private void updateStatus() {
         Player current = controller.getCurrentPlayer();
