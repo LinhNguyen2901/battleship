@@ -1,3 +1,5 @@
+// Controls game flow and turn management
+
 import java.io.Serializable;
 
 public class GameController implements Serializable {

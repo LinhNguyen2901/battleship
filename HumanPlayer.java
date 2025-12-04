@@ -1,3 +1,5 @@
+//  Human player that uses input to choose move
+
 public class HumanPlayer extends Player
 {
     private int[] nextShot = null;  // Stores the next shot chosen by the human player

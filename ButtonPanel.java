@@ -1,3 +1,5 @@
+// UI panel with Home, Save, Load, and New Game buttons
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;

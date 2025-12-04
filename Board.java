@@ -1,3 +1,5 @@
+// Manages the game board with info and ship grids
+
 import java.io.Serializable;
 import java.util.Arrays;
 

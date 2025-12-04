@@ -1,3 +1,5 @@
+// Represents individual ships with hit tracking
+
 import java.io.Serializable;
 
 public class Ship implements Serializable

@@ -1,3 +1,5 @@
+//  Computer player that makes random moves and chooses adjacent squares to hits
+
 import java.util.*;
 
 public class ComputerPlayer extends Player 
