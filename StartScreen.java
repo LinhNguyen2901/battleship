@@ -5,7 +5,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.*;
 import javax.imageio.ImageIO;
 
 public class StartScreen extends JFrame {
@@ -57,19 +57,24 @@ public class StartScreen extends JFrame {
         buttonPanel.setOpaque(false);
         buttonPanel.setBorder(new EmptyBorder(60, 0, 80, 0));
 
-        JButton humanButton = createStyledButton("Human vs Human", false);
-        JButton computerButton = createStyledButton("Play vs Computer", true);
+        JButton humanButton = createStyledButton("Human vs Human", false, false);
+        JButton computerButton = createStyledButton("Play vs Computer", true, false);
+        JButton loadButton = createStyledButton("Load Saved Game", false, true);
 
         humanButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         computerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loadButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         humanButton.setMaximumSize(new Dimension(360, 48));
         computerButton.setMaximumSize(new Dimension(360, 48));
+        loadButton.setMaximumSize(new Dimension(360, 48));
 
         buttonPanel.add(Box.createVerticalGlue());
         buttonPanel.add(humanButton);
         buttonPanel.add(Box.createVerticalStrut(20));
         buttonPanel.add(computerButton);
+        buttonPanel.add(Box.createVerticalStrut(20));
+        buttonPanel.add(loadButton);
         buttonPanel.add(Box.createVerticalGlue());
 
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -87,7 +92,7 @@ public class StartScreen extends JFrame {
         } catch (Exception ignored) {}
     }
 
-    private JButton createStyledButton(String text, boolean vsComputer) {
+    private JButton createStyledButton(String text, boolean vsComputer, boolean isLoad) {
         JButton button = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -112,7 +117,11 @@ public class StartScreen extends JFrame {
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        button.addActionListener(e -> startGame(vsComputer));
+        if (isLoad) {
+            button.addActionListener(e -> loadGame());
+        } else {
+            button.addActionListener(e -> startGame(vsComputer));
+        }
 
         return button;
     }
@@ -130,6 +139,126 @@ public class StartScreen extends JFrame {
         
         // Start player 1 placement
         showPlayer1Placement();
+    }
+    
+private void loadGame() {
+    try {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Load Game");
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Battleship Save Files", "bsg"));
+        
+        int userSelection = fileChooser.showOpenDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToLoad = fileChooser.getSelectedFile();
+            
+            // Ask user to choose game mode
+            Object[] options = {"Human vs Human", "Human vs Computer"};
+            int choice = JOptionPane.showOptionDialog(this,
+                "Choose game mode for loaded game:",
+                "Select Mode",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+            
+            if (choice == JOptionPane.CLOSED_OPTION) {
+                return; // User cancelled
+            }
+            
+            boolean isVsComputer = (choice == 1);
+            
+            BufferedReader reader = new BufferedReader(new FileReader(fileToLoad));
+            
+            // Create players based on user choice
+            Player p1 = new HumanPlayer();
+            Player p2 = isVsComputer ? new ComputerPlayer() : new HumanPlayer();
+            
+            String line;
+            int currentPlayerNum = 1;
+            
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("CURRENT_PLAYER:")) {
+                    currentPlayerNum = Integer.parseInt(line.substring("CURRENT_PLAYER:".length()));
+                } else if (line.equals("PLAYER_1_START")) {
+                    loadPlayerState(reader, p1);
+                } else if (line.equals("PLAYER_2_START")) {
+                    loadPlayerState(reader, p2);
+                }
+            }
+            
+            reader.close();
+            
+            // Create controller with loaded players
+            GameController loadedController = new GameController(p1, p2);
+            
+            // Set current player
+            while (loadedController.getCurrentPlayer() != (currentPlayerNum == 1 ? p1 : p2)) {
+                loadedController.switchPlayers();
+            }
+            
+            // Close start screen and open game window
+            this.dispose();
+            
+            SwingUtilities.invokeLater(() -> {
+                GameWindow window = new GameWindow(loadedController);
+                window.setVisible(true);
+            });
+            
+            JOptionPane.showMessageDialog(null, "Game loaded successfully!");
+        }
+    } catch (IOException e) {
+        JOptionPane.showMessageDialog(this, "Error loading game: " + e.getMessage(), 
+            "Error", JOptionPane.ERROR_MESSAGE);
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error loading game: Invalid file format", 
+            "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
+    
+    private void loadPlayerState(BufferedReader reader, Player player) throws IOException {
+        String line;
+        
+        // Load ships
+        line = reader.readLine();
+        int shipsCount = Integer.parseInt(line.substring("SHIPS_COUNT:".length()));
+        for (int i = 0; i < shipsCount; i++) {
+            line = reader.readLine();
+            String[] parts = line.substring("SHIP:".length()).split(",");
+            int length = Integer.parseInt(parts[0]);
+            int row = Integer.parseInt(parts[1]);
+            int col = Integer.parseInt(parts[2]);
+            boolean horizontal = Boolean.parseBoolean(parts[3]);
+            int hits = Integer.parseInt(parts[4]);
+            
+            // Place ship on board
+            player.getBoard().placeShip(row, col, length, horizontal);
+            Ship ship = new Ship(length, row, col, horizontal);
+            ship.setHits(hits);
+            player.addShip(ship);
+        }
+        
+        // Load shipGrid
+        line = reader.readLine(); // "SHIPGRID_START"
+        char[][] shipGrid = player.getBoard().getShipGrid();
+        for (int r = 0; r < 10; r++) {
+            line = reader.readLine();
+            for (int c = 0; c < 10; c++) {
+                shipGrid[r][c] = line.charAt(c);
+            }
+        }
+        
+        // Load infoGrid
+        line = reader.readLine(); // "INFOGRID_START"
+        char[][] infoGrid = player.getBoard().getInfoGrid();
+        for (int r = 0; r < 10; r++) {
+            line = reader.readLine();
+            for (int c = 0; c < 10; c++) {
+                infoGrid[r][c] = line.charAt(c);
+            }
+        }
+        
+        reader.readLine(); // "PLAYER_X_END"
     }
     
     private void showPlayer1Placement() {

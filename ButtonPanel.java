@@ -20,13 +20,11 @@ public class ButtonPanel extends JPanel {
         // Create buttons
         homeButton = createButton("Home", homeAction);
         saveButton = createButton("Save Game", saveAction);
-        loadButton = createButton("Load Game", loadAction);
         newGameButton = createButton("New Game", newGameAction);
 
         // Add buttons to panel
         add(homeButton);
         add(saveButton);
-        add(loadButton);
         add(newGameButton);
     }
 

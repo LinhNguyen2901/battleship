@@ -340,14 +340,14 @@ public class ShipPlacementScreen extends JFrame
         /**
          * Resets all ships to unplaced state
          */
-        public void resetShips() 
-        {
-            for (ShipContainer container : shipContainers) 
+            public void resetShips() 
             {
-                container.ship.reset();
+                for (ShipContainer container : shipContainers) 
+                {
+                    container.reset(); // Call container's reset instead of ship's reset
+                }
+                repaint();
             }
-            repaint();
-        }
         
         /**
          * Marks all ships as placed (used when random placement is clicked)
@@ -365,45 +365,55 @@ public class ShipPlacementScreen extends JFrame
     /**
      * Container holding a ship and its rotate button
      */
-    private class ShipContainer extends JPanel 
+/**
+ * Container holding a ship and its rotate button
+ */
+private class ShipContainer extends JPanel 
+{
+    DraggableShipComponent ship;
+    JButton rotateBtn;
+    
+    public ShipContainer(int length, String name, Color color) 
     {
-        DraggableShipComponent ship;
-        JButton rotateBtn;
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
+        setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         
-        public ShipContainer(int length, String name, Color color) 
-        {
-            setLayout(new BorderLayout());
-            setBackground(Color.WHITE);
-            setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
-            
-            // Rotate button at top
-            rotateBtn = new JButton("⟳");
-            rotateBtn.setFont(new Font("Arial", Font.BOLD, 16));
-            rotateBtn.setPreferredSize(new Dimension(40, 25));
-            rotateBtn.setMargin(new Insets(0, 0, 0, 0));
-            rotateBtn.setFocusPainted(false);
-            
-            // Ship component in center
-            ship = new DraggableShipComponent(length, name, color, this);
-            
-            // Add rotate functionality
-            rotateBtn.addActionListener(e -> {
-                if (!ship.placed) {
-                    ship.horizontal = !ship.horizontal;
-                    ship.repaint();
-                    boardPanel.repaint();
-                }
-            });
-            
-            // Layout
-            JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 2));
-            topPanel.setOpaque(false);
-            topPanel.add(rotateBtn);
-            
-            add(topPanel, BorderLayout.NORTH);
-            add(ship, BorderLayout.CENTER);
-        }
+        // Rotate button at top
+        rotateBtn = new JButton("⟳");
+        rotateBtn.setFont(new Font("Arial", Font.BOLD, 16));
+        rotateBtn.setPreferredSize(new Dimension(40, 25));
+        rotateBtn.setMargin(new Insets(0, 0, 0, 0));
+        rotateBtn.setFocusPainted(false);
+        
+        // Ship component in center
+        ship = new DraggableShipComponent(length, name, color, this);
+        
+        // Add rotate functionality
+        rotateBtn.addActionListener(e -> {
+            if (!ship.placed) {
+                ship.horizontal = !ship.horizontal;
+                ship.repaint();
+                boardPanel.repaint();
+            }
+        });
+        
+        // Layout
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 2));
+        topPanel.setOpaque(false);
+        topPanel.add(rotateBtn);
+        
+        add(topPanel, BorderLayout.NORTH);
+        add(ship, BorderLayout.CENTER);
     }
+    
+    // Add this method to reset the ship and re-enable button
+    public void reset() 
+    {
+        ship.reset();
+        rotateBtn.setEnabled(true);
+    }
+}
     
     /**
      * Component representing a draggable ship that can be placed on the board

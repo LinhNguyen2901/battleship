@@ -66,7 +66,7 @@ public class GameWindow extends JFrame {
                 e -> goHome(),
                 e -> restartGame(),
                 e -> saveGame(),
-                e -> loadGame()
+                null
         );
 
         // Keep reference to "New Game" button if needed
