@@ -18,22 +18,17 @@ public class SwitchPlayerScreen extends JPanel {
 
     private void setupUI() {
         setOpaque(true);
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.insets = new Insets(20, 20, 20, 20);
-
-        // Player number indicator (large, eye-catching)
         Player nextPlayer = controller.getCurrentPlayer();
         int nextPlayerNumber = (nextPlayer == controller.getPlayer1()) ? 1 : 2;
-        
         gbc.insets = new Insets(40, 20, 20, 20);
         JLabel playerNumberLabel = new JLabel("PLAYER " + nextPlayerNumber);
         playerNumberLabel.setFont(new Font("Arial", Font.BOLD, 72));
         playerNumberLabel.setForeground(new Color(100, 200, 255));
         playerNumberLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(playerNumberLabel, gbc);
-
         // Message label
         gbc.insets = new Insets(30, 20, 40, 20);
         JLabel messageLabel = new JLabel("Ready for your turn?");
@@ -46,10 +41,9 @@ public class SwitchPlayerScreen extends JPanel {
         gbc.insets = new Insets(10, 20, 10, 20);
         add(Box.createVerticalStrut(20), gbc);
 
-        // Switch button with hover effect
+        // Switch button
         gbc.insets = new Insets(20, 20, 50, 20);
         JButton switchBtn = new JButton("START TURN") {
-            @Override
             protected void paintComponent(Graphics g) {
                 if (getModel().isArmed()) {
                     g.setColor(new Color(80, 150, 255));
@@ -77,20 +71,14 @@ public class SwitchPlayerScreen extends JPanel {
         });
         add(switchBtn, gbc);
     }
-
-    @Override
+    
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
-        // Dark gradient background
-        GradientPaint gradient = new GradientPaint(0, 0, new Color(20, 20, 40), 
-                                                  getWidth(), getHeight(), new Color(10, 10, 20));
+        GradientPaint gradient = new GradientPaint(0, 0, new Color(20, 20, 40), getWidth(), getHeight(), new Color(10, 10, 20));
         g2d.setPaint(gradient);
         g2d.fillRect(0, 0, getWidth(), getHeight());
-        
-        // Subtle border effect
         g2d.setColor(new Color(100, 150, 255, 100));
         g2d.setStroke(new BasicStroke(2));
         g2d.drawRect(50, 100, getWidth() - 100, getHeight() - 200);

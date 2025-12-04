@@ -1,14 +1,14 @@
-// Manages the 10x10 game board with two grids: shipGrid tracks ship placements,
-// and infoGrid tracks shot results (hits, misses, destroyed ships) visible to opponent
+// shipGrid tracks is there is a ship or it is empty
+// infoGrid tracks shot results if there is  a hit, miss, or destroyed ship
 
 import java.io.Serializable;
 import java.util.Arrays;
 
-public class Board implements Serializable{
+public class Board implements Serializable
+{
     public static final int SIZE = 10;
-    private char[][] infoGrid; // ' ' empty, 'H' hit, 'M' miss, 'D' destroy // what oppponent sees
-    private char[][] shipGrid; // ' ' empty, 'S' ship // what player sees
-
+    private char[][] infoGrid; // ' ' empty, 'H' hit, 'M' miss, 'D' destroy
+    private char[][] shipGrid; // ' ' empty, 'S' ship 
     public Board() 
     {
         infoGrid = new char[SIZE][SIZE];
@@ -22,8 +22,6 @@ public class Board implements Serializable{
             Arrays.fill(row, ' ');
         }
     }
-
-    //Getters 
     public char[][] getInfoGrid()
     {
         return infoGrid;
@@ -40,7 +38,6 @@ public class Board implements Serializable{
     { 
         return shipGrid[r][c]; 
     }
-    //Setters
     public void setshipGrid(int r, int c, char value) 
     { 
         shipGrid[r][c] = value; 
@@ -49,46 +46,39 @@ public class Board implements Serializable{
     { 
         infoGrid[r][c] = value; 
     }
-
     public boolean inBounds(int r, int c) 
     {
         return r >= 0 && r < SIZE && c >= 0 && c < SIZE;
     }
-
-public boolean canPlaceShip(int r, int c, int length, boolean horizontal) // returns true if it is valid to place a ship
-{
-    // First check if the ship would go out of bounds
-    if (horizontal) 
+    public boolean canPlaceShip(int r, int c, int length, boolean horizontal) // returns true if it is valid to place a ship
     {
-        if (c + length > SIZE) 
-        {
-            return false;
+        //check boundaries
+        if (horizontal) {
+            if (c + length > SIZE) 
+            {
+                return false;
+            }
+        } 
+        else {
+            if (r + length > SIZE) 
+            {
+                return false;
+            }
         }
-    } 
-    else 
-    {
-        if (r + length > SIZE) 
-        {
-            return false;
+        //check if cell is empty
+        for (int i = 0; i < length; i++) {
+            int checkRow = horizontal ? r : r + i;
+            int checkCol = horizontal ? c + i : c;
+            
+            if (shipGrid[checkRow][checkCol] != ' ') 
+            {
+                return false;
+            }
         }
+        return true;
     }
-    
-    // Then check if all cells are empty
-    for (int i = 0; i < length; i++) 
-    {
-        int checkRow = horizontal ? r : r + i;
-        int checkCol = horizontal ? c + i : c;
-        
-        if (shipGrid[checkRow][checkCol] != ' ') 
-        {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-    public void placeShip(int r, int c, int length, boolean horizontal) // places ship if valid and updates ship grid
+    // places ship if valid and updates ship grid
+    public void placeShip(int r, int c, int length, boolean horizontal)
     {
         if (canPlaceShip(r,c, length, horizontal))
         {
@@ -105,7 +95,6 @@ public boolean canPlaceShip(int r, int c, int length, boolean horizontal) // ret
                 }
             }
         }
-
     }
 
     // Record a shot: returns true if hit
@@ -141,15 +130,13 @@ public boolean canPlaceShip(int r, int c, int length, boolean horizontal) // ret
               }
         }
             return true; 
-        }
-        else
-        { 
-            infoGrid[r][c] = 'M'; // if location is empty, it is a miss
+        } else{ 
+            infoGrid[r][c] = 'M'; //miss if grid empty
             return false;
         }
     }
 
-    // Get a view for the opponent (shows hit, miss, destroy but does not show location of ships)
+    //shows hit, miss, destroy for opponent
     public char getForOpponent(int r, int c) 
     {
         return infoGrid[r][c];
@@ -168,7 +155,7 @@ public boolean canPlaceShip(int r, int c, int length, boolean horizontal) // ret
         return true;
     }
     
-    // Reset board (for new game)
+    // Reset board
     public void reset() 
     {
         for (char[] row : infoGrid) 

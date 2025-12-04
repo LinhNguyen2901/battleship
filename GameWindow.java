@@ -21,13 +21,12 @@ public class GameWindow extends JFrame {
 
     public GameWindow(GameController controller) {
         this.controller = controller;
-
         setTitle("Battleship Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 700);
         setLayout(new BorderLayout());
 
-        // Top panel: player info, ships, remaining ships
+        // Top: player info, ships, remaining ships
         JPanel topPanel = new JPanel(new BorderLayout());
         statusLabel = new JLabel("", SwingConstants.CENTER);
         statusLabel.setFont(new Font("Arial", Font.BOLD, 22));
@@ -37,7 +36,7 @@ public class GameWindow extends JFrame {
         topPanel.add(shipsInfoLabel, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
 
-        // Middle panel: boards side by side
+        // Middle: boards (current player ships and opponent (for making guess))
         boardsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         boardsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
@@ -46,7 +45,7 @@ public class GameWindow extends JFrame {
         myBoardLabel = new JLabel("Your Ships", SwingConstants.CENTER);
         myBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); 
         leftPanel.add(myBoardLabel, BorderLayout.NORTH);
-        myBoardPanel = new BoardPanel(controller, true); // true = player's ship board
+        myBoardPanel = new BoardPanel(controller, true);
         leftPanel.add(myBoardPanel, BorderLayout.CENTER);
         boardsPanel.add(leftPanel);
 
@@ -55,44 +54,35 @@ public class GameWindow extends JFrame {
         opponentBoardLabel = new JLabel("Opponent Board (Click to shoot)", SwingConstants.CENTER);
         opponentBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); 
         rightPanel.add(opponentBoardLabel, BorderLayout.NORTH);
-        opponentBoardPanel = new BoardPanel(controller, false); // false = opponent guess board
+        opponentBoardPanel = new BoardPanel(controller, false);
         rightPanel.add(opponentBoardPanel, BorderLayout.CENTER);
         boardsPanel.add(rightPanel);
-
         add(boardsPanel, BorderLayout.CENTER);
 
-        // Bottom panel: buttons
+        // Buttons
         ButtonPanel buttonPanel = new ButtonPanel(
                 e -> goHome(),
                 e -> restartGame(),
-                e -> saveGame(),
-                null
+                e -> saveGame()
         );
-
-        // Keep reference to "New Game" button if needed
         this.switchButton = buttonPanel.newGameButton;
-
         add(buttonPanel, BorderLayout.SOUTH);
-
-        setLocationRelativeTo(null); // center window
+        setLocationRelativeTo(null);
         updateStatus();
     }
 
+    //go back to home screen and discard all current game information
     private void goHome() {
-        // Close current game window
         this.dispose();
-
-        // Show your start screen again
-        new StartScreen();   // ⬅️ change to your actual start menu class
+        new StartScreen();
     }
 
-
+    // save game to .bsg file (including board state and also player turn)
     private void saveGame() {
         try {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Game");
             fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Battleship Save Files", "bsg"));
-            
             int userSelection = fileChooser.showSaveDialog(this);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
@@ -100,19 +90,12 @@ public class GameWindow extends JFrame {
                 if (!filePath.endsWith(".bsg")) {
                     filePath += ".bsg";
                 }
-                
                 PrintWriter writer = new PrintWriter(new FileWriter(filePath));
-                
-                // Save current player (1 or 2)
+                // Save current player
                 int currentPlayerNum = (controller.getCurrentPlayer() == controller.getPlayer1()) ? 1 : 2;
                 writer.println("CURRENT_PLAYER:" + currentPlayerNum);
-                
-                // Save Player 1
                 savePlayerState(writer, controller.getPlayer1(), 1);
-                
-                // Save Player 2
                 savePlayerState(writer, controller.getPlayer2(), 2);
-                
                 writer.close();
                 JOptionPane.showMessageDialog(this, "Game saved successfully!");
             }
@@ -121,16 +104,14 @@ public class GameWindow extends JFrame {
         }
     }
     
+    //helper function to save player information like ship counts and stuff
     private void savePlayerState(PrintWriter writer, Player player, int playerNum) {
         writer.println("PLAYER_" + playerNum + "_START");
-        
         // Save ships
         writer.println("SHIPS_COUNT:" + player.getShips().size());
         for (Ship ship : player.getShips()) {
-            writer.println("SHIP:" + ship.getLength() + "," + ship.getStartRow() + "," + 
-                          ship.getStartCol() + "," + ship.isHorizontal() + "," + ship.getHits());
+            writer.println("SHIP:" + ship.getLength() + "," + ship.getStartRow() + "," + ship.getStartCol() + "," + ship.isHorizontal() + "," + ship.getHits());
         }
-        
         // Save shipGrid
         writer.println("SHIPGRID_START");
         char[][] shipGrid = player.getBoard().getShipGrid();
@@ -141,7 +122,6 @@ public class GameWindow extends JFrame {
             }
             writer.println(row.toString());
         }
-        
         // Save infoGrid
         writer.println("INFOGRID_START");
         char[][] infoGrid = player.getBoard().getInfoGrid();
@@ -152,75 +132,12 @@ public class GameWindow extends JFrame {
             }
             writer.println(row.toString());
         }
-        
         writer.println("PLAYER_" + playerNum + "_END");
     }
     
-    private void loadGame() {
-        try {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Load Game");
-            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Battleship Save Files", "bsg"));
-            
-            int userSelection = fileChooser.showOpenDialog(this);
-            if (userSelection == JFileChooser.APPROVE_OPTION) {
-                File fileToLoad = fileChooser.getSelectedFile();
-                BufferedReader reader = new BufferedReader(new FileReader(fileToLoad));
-                
-                // Reset both players first
-                controller.getPlayer1().reset();
-                controller.getPlayer2().reset();
-                
-                String line;
-                int currentPlayerNum = 1;
-                
-                while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("CURRENT_PLAYER:")) {
-                        currentPlayerNum = Integer.parseInt(line.substring("CURRENT_PLAYER:".length()));
-                    } else if (line.equals("PLAYER_1_START")) {
-                        loadPlayerState(reader, controller.getPlayer1());
-                    } else if (line.equals("PLAYER_2_START")) {
-                        loadPlayerState(reader, controller.getPlayer2());
-                    }
-                }
-                
-                reader.close();
-                
-                // Set current player
-                while (controller.getCurrentPlayer() != (currentPlayerNum == 1 ? controller.getPlayer1() : controller.getPlayer2())) {
-                    controller.switchPlayers();
-                }
-                
-                // Reset all buttons
-                for (int r = 0; r < 10; r++) {
-                    for (int c = 0; c < 10; c++) {
-                        myBoardPanel.buttons[r][c].ship = null;
-                        myBoardPanel.buttons[r][c].shipIndex = -1;
-                        myBoardPanel.buttons[r][c].isHit = false;
-                        opponentBoardPanel.buttons[r][c].ship = null;
-                        opponentBoardPanel.buttons[r][c].shipIndex = -1;
-                        opponentBoardPanel.buttons[r][c].isHit = false;
-                    }
-                }
-                
-                // Update boards
-                myBoardPanel.updateBoard();
-                opponentBoardPanel.updateBoard();
-                opponentBoardPanel.setEnabled(true);
-                updateStatus();
-                
-                JOptionPane.showMessageDialog(this, "Game loaded successfully!");
-            }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error loading game: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error loading game: Invalid file format", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-    
+    //helper function to load player information when load game
     private void loadPlayerState(BufferedReader reader, Player player) throws IOException {
         String line;
-        
         // Load ships
         line = reader.readLine();
         int shipsCount = Integer.parseInt(line.substring("SHIPS_COUNT:".length()));
@@ -232,16 +149,14 @@ public class GameWindow extends JFrame {
             int col = Integer.parseInt(parts[2]);
             boolean horizontal = Boolean.parseBoolean(parts[3]);
             int hits = Integer.parseInt(parts[4]);
-            
             // Place ship on board
             player.getBoard().placeShip(row, col, length, horizontal);
             Ship ship = new Ship(length, row, col, horizontal);
             ship.setHits(hits);
             player.addShip(ship);
         }
-        
-        // Load shipGrid
-        line = reader.readLine(); // "SHIPGRID_START"
+        // shipGrid
+        line = reader.readLine();
         char[][] shipGrid = player.getBoard().getShipGrid();
         for (int r = 0; r < 10; r++) {
             line = reader.readLine();
@@ -249,9 +164,8 @@ public class GameWindow extends JFrame {
                 shipGrid[r][c] = line.charAt(c);
             }
         }
-        
-        // Load infoGrid
-        line = reader.readLine(); // "INFOGRID_START"
+        //infoGrid
+        line = reader.readLine();
         char[][] infoGrid = player.getBoard().getInfoGrid();
         for (int r = 0; r < 10; r++) {
             line = reader.readLine();
@@ -259,52 +173,44 @@ public class GameWindow extends JFrame {
                 infoGrid[r][c] = line.charAt(c);
             }
         }
-        
-        reader.readLine(); // "PLAYER_X_END"
+        reader.readLine();
     }
     
- private void restartGame() {
-    // Determine if it was vs computer
+    //restart game
+    private void restartGame() {
+    //check if game against computer
     boolean wasVsComputer = (controller.getPlayer2() instanceof ComputerPlayer);
-    
-    // Close current game window
     this.dispose();
-    
     // Create new players
     Player newPlayer1 = new HumanPlayer();
     Player newPlayer2 = wasVsComputer ? new ComputerPlayer() : new HumanPlayer();
     GameController newController = new GameController(newPlayer1, newPlayer2);
     
-    // Show ship placement screen for player 1
+    // ship placement for player 1 (both computer and human)
     new ShipPlacementScreen(true, () -> {
-        // Copy player 1's ships
         for (Window window : Window.getWindows()) {
             if (window instanceof ShipPlacementScreen && window.isVisible()) {
                 ShipPlacementScreen screen = (ShipPlacementScreen) window;
                 for (Ship s : screen.getShips()) {
                     newPlayer1.addShip(s);
-                    newPlayer1.getBoard().placeShip(s.getStartRow(), s.getStartCol(), 
-                        s.getLength(), s.isHorizontal());
+                    newPlayer1.getBoard().placeShip(s.getStartRow(), s.getStartCol(), s.getLength(), s.isHorizontal());
                 }
                 break;
             }
         }
-        
-        // Handle player 2
+        // player 2
+        //if computer then just make it automatic
         if (wasVsComputer) {
-            // Computer places automatically
             newPlayer2.placeShipsAutomatically();
             startNewGameWindow(newController);
         } else {
-            // Player 2 places manually
             new ShipPlacementScreen(false, () -> {
                 for (Window window : Window.getWindows()) {
                     if (window instanceof ShipPlacementScreen && window.isVisible()) {
                         ShipPlacementScreen screen = (ShipPlacementScreen) window;
                         for (Ship s : screen.getShips()) {
                             newPlayer2.addShip(s);
-                            newPlayer2.getBoard().placeShip(s.getStartRow(), s.getStartCol(), 
-                                s.getLength(), s.isHorizontal());
+                            newPlayer2.getBoard().placeShip(s.getStartRow(), s.getStartCol(), s.getLength(), s.isHorizontal());
                         }
                         break;
                     }
@@ -315,71 +221,62 @@ public class GameWindow extends JFrame {
     });
 }
 
-private void startNewGameWindow(GameController newController) 
-{
-    SwingUtilities.invokeLater(() -> {
-        GameWindow window = new GameWindow(newController);
-        window.setVisible(true);
-    });
-}
+    // start new game
+    private void startNewGameWindow(GameController newController) {
+        SwingUtilities.invokeLater(() -> {
+            GameWindow window = new GameWindow(newController);
+            window.setVisible(true);
+        });
+    }
 
 
-private void updateStatus() 
-{
-    Player current = controller.getCurrentPlayer();
-    Player opponent = controller.getOpponent();
-    int currentPlayerNumber = (current == controller.getPlayer1()) ? 1 : 2;
-    int myShipsRemaining = countRemainingShips(current);
-    int opponentShipsRemaining = countRemainingShips(opponent);
-    String shipsInfo = getShipsInfo(current);
-
-    // Update board labels - always from human player's perspective in vs Computer mode
-    boolean isVsComputer = (controller.getPlayer1() instanceof ComputerPlayer || 
-                       controller.getPlayer2() instanceof ComputerPlayer);
-    if (isVsComputer) 
-    {
-        // Check who the current player is to determine board perspective
-        if (current instanceof ComputerPlayer) {
-            // Boards are from computer's view
-            myBoardLabel.setText("Computer Board");
-            opponentBoardLabel.setText("Your Ships");
-        } else {
-            // Boards are from human's view
+    // update status: current player, ship, guess
+    private void updateStatus() {
+        Player current = controller.getCurrentPlayer();
+        Player opponent = controller.getOpponent();
+        int currentPlayerNumber = (current == controller.getPlayer1()) ? 1 : 2;
+        int myShipsRemaining = countRemainingShips(current);
+        int opponentShipsRemaining = countRemainingShips(opponent);
+        String shipsInfo = getShipsInfo(current);
+        // board labels
+        boolean isVsComputer = (controller.getPlayer1() instanceof ComputerPlayer || controller.getPlayer2() instanceof ComputerPlayer);
+        if (isVsComputer) {
+            // ifcurrent player is computer then always player 1 point of view
+            if (current instanceof ComputerPlayer) {
+                myBoardLabel.setText("Computer Board");
+                opponentBoardLabel.setText("Your Ships");
+            } else {
+                myBoardLabel.setText("Your Ships");
+                opponentBoardLabel.setText("Computer Board");
+            }
+        } 
+        else {
             myBoardLabel.setText("Your Ships");
-            opponentBoardLabel.setText("Computer Board");
+            opponentBoardLabel.setText("Opponent Board");
         }
-    } 
-    else 
-    {
-        // Human vs Human
-        myBoardLabel.setText("Your Ships");
-        opponentBoardLabel.setText("Opponent Board");
+        // Check  game end like win or lose
+        if (opponent.getBoard().allShipsSunk(opponent.getShips())) {
+            if (current instanceof ComputerPlayer) {
+                statusLabel.setText("Game Over - Computer Wins! ");
+            } else {
+                statusLabel.setText(" Congratulations! You Win! ");
+            }
+            shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Remaining: " + myShipsRemaining);
+            opponentBoardPanel.setEnabled(false);
+        } else {
+            if (current instanceof ComputerPlayer) {
+                statusLabel.setText("Computer's Turn");
+            } else {
+                statusLabel.setText("Player " + currentPlayerNumber + "'s Turn");
+            }
+            shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Your remaining: " + myShipsRemaining + " | Opponent remaining: " + opponentShipsRemaining);
+        }
+        switchButton.setEnabled(true);
     }
 
-    // Check win/lose
-    if (opponent.getBoard().allShipsSunk(opponent.getShips())) {
-        if (current instanceof ComputerPlayer) {
-            statusLabel.setText("💀 Game Over - Computer Wins! 💀");
-        } else {
-            statusLabel.setText("🎉 Congratulations! You Win! 🎉");
-        }
-        shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Remaining: " + myShipsRemaining);
-        opponentBoardPanel.setEnabled(false);
-    } else {
-        if (current instanceof ComputerPlayer) {
-            statusLabel.setText("Computer's Turn");
-        } else {
-            statusLabel.setText("Player " + currentPlayerNumber + "'s Turn");
-        }
-        shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Your remaining: " + myShipsRemaining + 
-                               " | Opponent remaining: " + opponentShipsRemaining);
-    }
-    switchButton.setEnabled(true);
-}
-
+    //switch player screen (use an overlay to the entire window and disable interaction)
     private void showSwitchPlayerScreen() {
         SwitchPlayerScreen screen = new SwitchPlayerScreen(controller, () -> {
-            // Hide the overlay
             JComponent glassPane = (JComponent) getGlassPane();
             glassPane.setVisible(false);
             myBoardPanel.setEnabled(true);
@@ -389,7 +286,7 @@ private void updateStatus()
             updateStatus();
         });
         
-        // Use glass pane to overlay entire window
+        // Overlay entire window
         JComponent glassPane = (JComponent) getGlassPane();
         glassPane.setLayout(new BorderLayout());
         glassPane.removeAll();
@@ -397,23 +294,21 @@ private void updateStatus()
         glassPane.setVisible(true);
         glassPane.revalidate();
         glassPane.repaint();
-        
-        // Disable interaction with main window
+        // Disable interaction 
         myBoardPanel.setEnabled(false);
         opponentBoardPanel.setEnabled(false);
     }
 
+    //present information of ships like length and and number
     private String getShipsInfo(Player player) {
-        // Count number of ships by length
         Map<Integer, Integer> shipCounts = new HashMap<>();
         for (Ship s : player.getShips()) {
             int length = s.getLength();
             shipCounts.put(length, shipCounts.getOrDefault(length, 0) + 1);
         }
-    
         java.util.List<String> infoParts = new ArrayList<>();
         for (Map.Entry<Integer, Integer> entry : shipCounts.entrySet()) {
-            infoParts.add(entry.getValue() + " ship(s) of " + entry.getKey());
+            infoParts.add(entry.getValue() + " ship of " + entry.getKey());
         }
         return String.join(", ", infoParts);
     }
@@ -422,7 +317,7 @@ private void updateStatus()
         int count = 0;
         for (Ship s : player.getShips()) {
             if (!s.isSunk()) {
-                count++;
+                count += 1;
             }
         }
         return count;
@@ -432,14 +327,12 @@ private void updateStatus()
         private CellButton[][] buttons = new CellButton[10][10];
         private GameController controller;
         private boolean isMyBoard; // true = player's ship board, false = opponent guess board
-
         public BoardPanel(GameController controller, boolean isMyBoard) {
             this.controller = controller;
             this.isMyBoard = isMyBoard;
             setLayout(new GridLayout(10, 10));
             setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             setBackground(Color.WHITE);
-
             for (int r = 0; r < 10; r++) {
                 for (int c = 0; c < 10; c++) {
                     CellButton btn = new CellButton();
@@ -448,8 +341,7 @@ private void updateStatus()
                     btn.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
                     btn.setOpaque(true);
                     final int row = r, col = c;
-                    
-                    // Only allow clicks on opponent guess board
+                    //can only clck on opponent board like making guess
                     if (!isMyBoard) {
                         btn.addActionListener(e -> handleClick(row, col));
                     } else {
@@ -463,125 +355,108 @@ private void updateStatus()
             updateBoard();
         }
 
-private void handleClick(int r, int c) {
-    Player current = controller.getCurrentPlayer();
-    Player opponent = controller.getOpponent();
+        private void handleClick(int r, int c) {
+            Player current = controller.getCurrentPlayer();
+            Player opponent = controller.getOpponent();
 
-    if (current instanceof HumanPlayer) {
-        // Check if cell already chosen
-        char[][] opponentView = opponent.getBoardForOpponent();
-        if (opponentView[r][c] != ' ') {
-            return;
-        }
-        ((HumanPlayer) current).setNextShot(r, c, opponentView);
-        Player targetOpponent = opponent;
-        String result = controller.takeTurn();
-        
-        char[][] updatedView = targetOpponent.getBoardForOpponent();
-        boolean sunk = updatedView[r][c] == 'D';
-        boolean hit = updatedView[r][c] == 'H' || updatedView[r][c] == 'D';
-        
-        controller.switchPlayers();
-        opponentBoardPanel.updateBoard();
-        controller.switchPlayers();
-        // Display result message
-        if (result.equals("gameOver")) {
-            myBoardPanel.updateBoard();
-            opponentBoardPanel.updateBoard();
-            opponentBoardPanel.setEnabled(false);
-            updateStatus();
-            JOptionPane.showMessageDialog(GameWindow.this, 
-                "Player " + (controller.getCurrentPlayer() == controller.getPlayer1() ? 1 : 2) + " WINS!");
-        } else {
-            // Show hit/miss popup
-            String message;
-            if (sunk)
-                message = "You sink a ship!";
-            else if (hit)
-                message = "Hit!";
-            else
-                message = "Miss!";
-            int choice = JOptionPane.showOptionDialog(
-                this,
-                message,
-                "Result",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.INFORMATION_MESSAGE,
-                null,
-                new Object[]{"OK"},
-                "OK"
-            );
-
-            if (choice == 0) {
-                // Check if next player is computer
-                if (controller.getCurrentPlayer() instanceof ComputerPlayer) {
-                    // Computer plays automatically
-                    playComputerTurn();
+            if (current instanceof HumanPlayer) {
+                // if cell already guessed just do nothing
+                char[][] opponentView = opponent.getBoardForOpponent();
+                if (opponentView[r][c] != ' ') {
+                    return;
+                }
+                ((HumanPlayer) current).setNextShot(r, c, opponentView);
+                Player targetOpponent = opponent;
+                String result = controller.takeTurn();
+                
+                char[][] updatedView = targetOpponent.getBoardForOpponent();
+                boolean sunk = updatedView[r][c] == 'D';
+                boolean hit = updatedView[r][c] == 'H' || updatedView[r][c] == 'D';
+                
+                controller.switchPlayers();
+                opponentBoardPanel.updateBoard();
+                controller.switchPlayers();
+                // Show a message to player after each guess
+                if (result.equals("gameOver")) {
+                    myBoardPanel.updateBoard();
+                    opponentBoardPanel.updateBoard();
+                    opponentBoardPanel.setEnabled(false);
+                    updateStatus();
+                    JOptionPane.showMessageDialog(GameWindow.this, "Player " + (controller.getCurrentPlayer() == controller.getPlayer1() ? 1 : 2) + " wins!");
                 } else {
-                    // Show switch player screen for human vs human
-                    showSwitchPlayerScreen();
+                    // Show hit/miss popup
+                    String message;
+                    if (sunk)
+                        message = "You sink a ship!";
+                    else if (hit)
+                        message = "Hit!";
+                    else
+                        message = "Miss!";
+                    int choice = JOptionPane.showOptionDialog(
+                        this,
+                        message,
+                        "Result",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null,
+                        new Object[]{"OK"},
+                        "OK"
+                    );
+                    if (choice == 0) {
+                        if (controller.getCurrentPlayer() instanceof ComputerPlayer) {
+                            // Computer plays automatically
+                            playComputerTurn();
+                        } else {
+                            // Show switch player screen
+                            showSwitchPlayerScreen();
+                        }
+                    }
                 }
             }
         }
-    }
-}
 
-private void playComputerTurn() {
-    // Disable opponent board during computer's turn
-    opponentBoardPanel.setEnabled(false);
-    
-    // Manually set status for computer's turn
-    statusLabel.setText("Computer's Turn");
-    Player humanPlayer = controller.getOpponent();
-    int humanShipsRemaining = countRemainingShips(humanPlayer);
-    int computerShipsRemaining = countRemainingShips(controller.getCurrentPlayer());
-    shipsInfoLabel.setText("Your remaining: " + humanShipsRemaining + 
-                           " | Computer remaining: " + computerShipsRemaining);
-    
-    // Use Timer with 2 second delay
-    Timer timer = new Timer(2000, e -> {
-        String result = controller.takeTurn();
-        
-        // Update boards (they will show from human's perspective after takeTurn switches)
-        myBoardPanel.updateBoard();
-        opponentBoardPanel.updateBoard();
-        
-        if (result.equals("gameOver")) {
-            // Computer won - boards are now from human's perspective (switched back)
-            // But we need to flip the labels because computer just won
-            myBoardLabel.setText("Computer Board");
-            opponentBoardLabel.setText("Your Board");
-            
+        private void playComputerTurn() {
+            // Disable opponent board during computer's turn
             opponentBoardPanel.setEnabled(false);
-            statusLabel.setText("Game Over - Computer Wins!");
-            
-            // Fix the ships info to show correct perspective
-            int humanRemaining = countRemainingShips(controller.getCurrentPlayer());
-            int computerRemaining = countRemainingShips(controller.getOpponent());
-            shipsInfoLabel.setText("Your remaining: " + humanRemaining + 
-                                   " | Computer remaining: " + computerRemaining);
-            
-            JOptionPane.showMessageDialog(GameWindow.this, 
-                "Game Over! Computer WINS!");
-        } else {
-            // Re-enable board for human player
-            opponentBoardPanel.setEnabled(true);
-            updateStatus();
+            // when its computer turn
+            statusLabel.setText("Computer's Turn");
+            Player humanPlayer = controller.getOpponent();
+            int humanShipsRemaining = countRemainingShips(humanPlayer);
+            int computerShipsRemaining = countRemainingShips(controller.getCurrentPlayer());
+            shipsInfoLabel.setText("Your remaining: " + humanShipsRemaining + " | Computer remaining: " + computerShipsRemaining);
+            // default 1,5s for computer turn
+            Timer timer = new Timer(1500, e -> {
+                String result = controller.takeTurn();
+                // Update boards after computer turn
+                myBoardPanel.updateBoard();
+                opponentBoardPanel.updateBoard();
+                if (result.equals("gameOver")) {
+                    myBoardLabel.setText("Computer Board");
+                    opponentBoardLabel.setText("Your Board");
+                    opponentBoardPanel.setEnabled(false);
+                    statusLabel.setText("You lose! Computer Wins!");
+                    int humanRemaining = countRemainingShips(controller.getCurrentPlayer());
+                    int computerRemaining = countRemainingShips(controller.getOpponent());
+                    shipsInfoLabel.setText("Your remaining: " + humanRemaining + " | Computer remaining: " + computerRemaining);
+                    JOptionPane.showMessageDialog(GameWindow.this, "You lose! Computer wins!");
+                } else {
+                    //enable user to make guess
+                    opponentBoardPanel.setEnabled(true);
+                    updateStatus();
+                }
+            });
+            timer.setRepeats(false);
+            timer.start();
         }
-    });
-    timer.setRepeats(false);
-    timer.start();
-}
+        //update board (with red X for hit and blue for miss)
         public void updateBoard() {
             Player current = controller.getCurrentPlayer();
             Player opponent = controller.getOpponent();
             
+            //show my board ship information (oppoenent's guess)
             if (isMyBoard) {
-                // Player's ship board: show shipGrid and mark hits
                 char[][] infoGrid = current.getBoard().getInfoGrid();
                 java.util.List<Ship> ships = current.getShips();
-                
-                // Reset all buttons
                 for (int r = 0; r < 10; r++) {
                     for (int c = 0; c < 10; c++) {
                         CellButton btn = buttons[r][c];
@@ -592,18 +467,15 @@ private void playComputerTurn() {
                         btn.setBackground(Color.WHITE);
                     }
                 }
-                
-                // Assign ship info to each button
+                //Each button is a ship info
                 for (int shipIdx = 0; shipIdx < ships.size(); shipIdx++) {
                     Ship ship = ships.get(shipIdx);
                     int startRow = ship.getStartRow();
                     int startCol = ship.getStartCol();
                     boolean horizontal = ship.isHorizontal();
-                    
                     for (int i = 0; i < ship.getLength(); i++) {
                         int r = horizontal ? startRow : startRow + i;
                         int c = horizontal ? startCol + i : startCol;
-                        
                         if (r >= 0 && r < 10 && c >= 0 && c < 10) {
                             CellButton btn = buttons[r][c];
                             btn.ship = ship;
@@ -613,7 +485,6 @@ private void playComputerTurn() {
                         }
                     }
                 }
-                
                 // Mark opponent shots on our board
                 char[][] opponentGuesses = current.getBoard().getInfoGrid();
                 for (int r = 0; r < 10; r++) {
@@ -624,15 +495,14 @@ private void playComputerTurn() {
                         }
                     }
                 }
-                
-                // Repaint all buttons
+                // Repaint buttons
                 for (int r = 0; r < 10; r++) {
                     for (int c = 0; c < 10; c++) {
                         buttons[r][c].repaint();
                     }
                 }
             } else {
-                // Opponent board: show infoGrid for guessing
+                // show guesses on opponeent board
                 char[][] view = opponent.getBoardForOpponent();
                 for (int r = 0; r < 10; r++) {
                     for (int c = 0; c < 10; c++) {
@@ -641,21 +511,20 @@ private void playComputerTurn() {
                         btn.ship = null;
                         btn.shipIndex = -1;
                         btn.isHitMarked = false;
-                        
                         switch (cell) {
-                            case 'H':
+                            case 'H':       //for hit
                                 btn.isHit = true;
                                 btn.isHitMarked = true;
-                                btn.setBackground(new Color(255, 200, 200)); // light red
+                                btn.setBackground(new Color(255, 200, 200));
                                 break;
-                            case 'M':
+                            case 'M':       //for miss
                                 btn.isHit = false;
-                                btn.setBackground(new Color(200, 200, 255)); // light blue for miss
+                                btn.setBackground(new Color(200, 200, 255));
                                 break;
-                            case 'D':
+                            case 'D':       //for destroy/sunk
                                 btn.isHit = true;
                                 btn.isHitMarked = true;
-                                btn.setBackground(new Color(255, 120, 120)); // light red, same as hit
+                                btn.setBackground(new Color(255, 120, 120));
                                 break;
                             default:
                                 btn.isHit = false;
@@ -676,15 +545,14 @@ private void playComputerTurn() {
         }
     }
     
-    // Custom button to draw ships as ovals
+    //ship gui
     private class CellButton extends JButton {
         Ship ship = null;
         int shipIndex = -1;
         boolean isHit = false;
-        boolean isOpponentShot = false;  // Track opponent shots on our board
-        boolean isHitMarked = false;      // Track hits on opponent board (for drawing X)
-        
-        // Colors for different ships
+        boolean isOpponentShot = false; 
+        boolean isHitMarked = false; 
+        //different colors for ships
         private Color[] shipColors = {
             new Color(50, 100, 200),   // Blue
             new Color(100, 200, 100),  // Green
@@ -693,33 +561,25 @@ private void playComputerTurn() {
             new Color(200, 100, 150)   // Pink
         };
         
-        @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             
             if (ship != null) {
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                
                 int width = getWidth();
                 int height = getHeight();
                 int padding = 2;
-                
-                // Get ship color
                 Color shipColor = shipColors[shipIndex % shipColors.length];
                 if (isHit) {
-                    // Ship hit: red
                     shipColor = Color.RED;
                 }
-                
-                // Draw circle for each grid celld
+                // Draw circle for ship
                 int circleSize = Math.min(width, height) - 2 * padding;
                 int x = (width - circleSize) / 2;
                 int y = (height - circleSize) / 2;
-                
                 g2d.setColor(shipColor);
                 g2d.fillOval(x, y, circleSize, circleSize);
-                
                 // Draw X if hit
                 if (isHit) {
                     g2d.setColor(Color.WHITE);
@@ -735,7 +595,7 @@ private void playComputerTurn() {
                 // Draw opponent shots on opponent board as grey X
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setColor(new Color(150, 150, 150));  // Grey color
+                g2d.setColor(new Color(150, 150, 150)); 
                 g2d.setStroke(new BasicStroke(2));
                 int width = getWidth();
                 int height = getHeight();
@@ -743,12 +603,11 @@ private void playComputerTurn() {
                 g2d.drawLine(padding, padding, width - padding, height - padding);
                 g2d.drawLine(width - padding, padding, padding, height - padding);
             }
-            
             // Draw opponent shots on our board as grey X (my board)
             if (isOpponentShot && ship == null) {
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setColor(new Color(150, 150, 150));  // Grey color
+                g2d.setColor(new Color(150, 150, 150)); 
                 g2d.setStroke(new BasicStroke(2));
                 int width = getWidth();
                 int height = getHeight();
@@ -756,7 +615,6 @@ private void playComputerTurn() {
                 g2d.drawLine(padding, padding, width - padding, height - padding);
                 g2d.drawLine(width - padding, padding, padding, height - padding);
             }
-            
             // Draw X on opponent board when we hit
             if (isHitMarked) {
                 Graphics2D g2d = (Graphics2D) g;
@@ -771,18 +629,4 @@ private void playComputerTurn() {
             }
         }
     }
-
-    
-
-   /*  public static void main(String[] args) {
-        Player p1 = new HumanPlayer();
-        Player p2 = new HumanPlayer(); 
-        GameController gc = new GameController(p1, p2);
-        gc.setupGame();
-
-        SwingUtilities.invokeLater(() -> {
-            GameWindow gw = new GameWindow(gc);
-            gw.setVisible(true);
-        });
-    }*/
 }

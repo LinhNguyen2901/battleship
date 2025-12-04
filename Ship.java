@@ -1,4 +1,4 @@
-// Represents individual ships tracking their length, position, orientation,
+// Ships tracking their length, position, orientation,
 // hit count, and whether they occupy specific board coordinates
 
 import java.io.Serializable;
@@ -7,8 +7,8 @@ public class Ship implements Serializable
 {
     private int length;             // length of ship
     private int hits;               // number of times ship has been hit
-    private int startRow, startCol; // row and column where ship begins
-    private boolean horizontal;     // stores if ship is placed horizontally or vertically
+    private int startRow, startCol; //start grid
+    private boolean horizontal;     //direction 
 
     public Ship(int l, int r, int c, boolean h) 
     {
@@ -39,7 +39,7 @@ public class Ship implements Serializable
     {
         return startCol;
     }
-    public boolean isSunk() // returns if all coordinates of ship have been hit
+    public boolean isSunk()
     { 
         return hits >= length; 
     }
@@ -54,7 +54,8 @@ public class Ship implements Serializable
         hits = h;
     }
 
-    public boolean occupies(int r, int c) // see if a ship is on this cell
+    //check if a ship on that cell ()
+    public boolean occupies(int r, int c)
     {
         for (int i = 0; i < length; i++) 
         {
@@ -62,13 +63,13 @@ public class Ship implements Serializable
             int currentCol = startCol;
             if(horizontal)
             {
-                currentCol += i; // increment columns by i if horizontal
+                currentCol += i;
             }
             else
             {
-                currentRow +=i; // increment row by i if  ship is not horizontal
+                currentRow +=i;
             }
-            if (currentRow == r && currentCol == c) // if the coordinates match, a ship is there
+            if (currentRow == r && currentCol == c)
             {
                 return true;
             }

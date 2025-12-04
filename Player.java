@@ -1,31 +1,28 @@
-// Abstract base class for all players providing ship management, board access,
-// and automatic ship placement functionality
+// Abstract base class for all players 
+// Only has one abstract function: ChooseShot
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 
-abstract class Player implements Serializable{
+abstract class Player implements Serializable
+{
     protected ArrayList<Ship> ships = new ArrayList<Ship>();
     protected Board board = new Board();
     private Random rand = new Random();
-
     public Board getBoard() 
     { 
         return board;
     }
-
-    // Return a board for the opponent (shows hits, misses, and destroy)
+    // Returns board for the opponent that shows hits, misses, and destroy
     public char[][] getBoardForOpponent() 
     {
         return board.getInfoGrid();
     }
-
     public void addShip(Ship s) // adds ship to arrayList
     { 
         ships.add(s); 
     }
-
     protected void placeShipAutomatically(int length) // places a ship randomly
     {
         boolean placed = false;
@@ -51,18 +48,15 @@ abstract class Player implements Serializable{
             placeShipAutomatically(size); // place each ship of size in shipSizes array
         }
     }
-
     public ArrayList<Ship> getShips() 
     {
         return ships;
     }
-    
     // Reset player
     public void reset() 
     {
         ships.clear();
         board.reset();
     }
-
     public abstract int[] chooseShot(char [][] opponentBoard); 
 }
