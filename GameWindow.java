@@ -56,36 +56,17 @@ public class GameWindow extends JFrame {
         add(boardsPanel, BorderLayout.CENTER);
 
         // Bottom panel: buttons
-        JPanel bottomPanel = new JPanel(new FlowLayout());
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        JButton saveButton = new JButton("Save Game");
-        saveButton.setFont(new Font("Arial", Font.BOLD, 14));
-        saveButton.setPreferredSize(new Dimension(120, 35));
-        saveButton.addActionListener(e -> saveGame());
-        
-        JButton loadButton = new JButton("Load Game");
-        loadButton.setFont(new Font("Arial", Font.BOLD, 14));
-        loadButton.setPreferredSize(new Dimension(120, 35));
-        loadButton.addActionListener(e -> loadGame());
-        
-        switchButton = new JButton("New Game");
-        switchButton.setFont(new Font("Arial", Font.BOLD, 14));
-        switchButton.setPreferredSize(new Dimension(120, 35));
-        switchButton.setEnabled(true); 
-        switchButton.setVisible(true); 
-        switchButton.addActionListener(e -> restartGame());
+        ButtonPanel buttonPanel = new ButtonPanel(
+                e -> goHome(),
+                e -> restartGame(),
+                e -> saveGame(),
+                e -> loadGame()
+        );
 
-        JButton homeButton = new JButton("Home");
-        homeButton.setFont(new Font("Arial", Font.BOLD, 14));
-        homeButton.setPreferredSize(new Dimension(120, 35));
-        homeButton.addActionListener(e -> goHome());
+        // Keep reference to "New Game" button if needed
+        this.switchButton = buttonPanel.newGameButton;
 
-        bottomPanel.add(homeButton);
-        bottomPanel.add(saveButton);
-        bottomPanel.add(loadButton);
-        bottomPanel.add(switchButton);
-        add(bottomPanel, BorderLayout.SOUTH);
+        add(buttonPanel, BorderLayout.SOUTH);
 
         setLocationRelativeTo(null); // center window
         updateStatus();
