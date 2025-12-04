@@ -528,10 +528,12 @@ public class GameWindow extends JFrame {
                         char cell = view[r][c];
                         btn.ship = null;
                         btn.shipIndex = -1;
+                        btn.isHitMarked = false;
                         
                         switch (cell) {
                             case 'H':
                                 btn.isHit = true;
+                                btn.isHitMarked = true;
                                 btn.setBackground(new Color(255, 200, 200)); // light red
                                 break;
                             case 'M':
@@ -540,6 +542,7 @@ public class GameWindow extends JFrame {
                                 break;
                             case 'D':
                                 btn.isHit = true;
+                                btn.isHitMarked = true;
                                 btn.setBackground(new Color(255, 120, 120)); // light red, same as hit
                                 break;
                             default:
@@ -567,6 +570,7 @@ public class GameWindow extends JFrame {
         int shipIndex = -1;
         boolean isHit = false;
         boolean isOpponentShot = false;  // Track opponent shots on our board
+        boolean isHitMarked = false;      // Track hits on opponent board (for drawing X)
         
         // Colors for different ships
         private Color[] shipColors = {
@@ -637,6 +641,19 @@ public class GameWindow extends JFrame {
                 int width = getWidth();
                 int height = getHeight();
                 int padding = 6;
+                g2d.drawLine(padding, padding, width - padding, height - padding);
+                g2d.drawLine(width - padding, padding, padding, height - padding);
+            }
+            
+            // Draw X on opponent board when we hit
+            if (isHitMarked) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(Color.WHITE);
+                g2d.setStroke(new BasicStroke(2));
+                int width = getWidth();
+                int height = getHeight();
+                int padding = 8;
                 g2d.drawLine(padding, padding, width - padding, height - padding);
                 g2d.drawLine(width - padding, padding, padding, height - padding);
             }
