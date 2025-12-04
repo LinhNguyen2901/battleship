@@ -1,3 +1,5 @@
+// Launches the start screen
+
 import javax.swing.SwingUtilities;
 
 public class Main 

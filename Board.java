@@ -1,3 +1,6 @@
+// Manages the 10x10 game board with two grids: shipGrid tracks ship placements,
+// and infoGrid tracks shot results (hits, misses, destroyed ships) visible to opponent
+
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -10,15 +13,17 @@ public class Board implements Serializable{
     {
         infoGrid = new char[SIZE][SIZE];
         shipGrid = new char[SIZE][SIZE];
-        for (char[] row : infoGrid) // creates empty grid
+        for (char[] row : infoGrid) // creates empty info grid
         {
             Arrays.fill(row, ' ');
         }
-        for (char[] row : shipGrid) // creates empty grid
+        for (char[] row : shipGrid) // creates empty ship grid
         {
             Arrays.fill(row, ' ');
         }
     }
+
+    //Getters 
     public char[][] getInfoGrid()
     {
         return infoGrid;
@@ -35,6 +40,7 @@ public class Board implements Serializable{
     { 
         return shipGrid[r][c]; 
     }
+    //Setters
     public void setshipGrid(int r, int c, char value) 
     { 
         shipGrid[r][c] = value; 
@@ -44,56 +50,51 @@ public class Board implements Serializable{
         infoGrid[r][c] = value; 
     }
 
-    public boolean inBounds(int r, int c) {
+    public boolean inBounds(int r, int c) 
+    {
         return r >= 0 && r < SIZE && c >= 0 && c < SIZE;
     }
 
-    public boolean canPlaceShip(int r, int c, int length, boolean horizontal) 
+public boolean canPlaceShip(int r, int c, int length, boolean horizontal) // returns true if it is valid to place a ship
+{
+    // First check if the ship would go out of bounds
+    if (horizontal) 
     {
-      for(int i=0; i<length; i++)
-      {
-        if (r >= 0 && r < SIZE && c >= 0 && c < SIZE)
+        if (c + length > SIZE) 
         {
-            if (shipGrid[r][c] !=' ') // cannot place a ship if it's full
-            {
-                return false;
-
-            }
-            if (horizontal) // if ship is horizontal, increment columns
-            {
-                if ((c+1) < SIZE)
-                {
-                    c++;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if ((r+1) < SIZE) // if ship is vertical, increment rows
-                {
-                    ++r;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            return false;
         }
-      }
-      return true;
-
-    }
-
-    public void placeShip(int r, int c, int length, boolean horizontal) 
+    } 
+    else 
     {
-        if (canPlaceShip(r,c, length, horizontal)) // places ship. updates ship grid
+        if (r + length > SIZE) 
+        {
+            return false;
+        }
+    }
+    
+    // Then check if all cells are empty
+    for (int i = 0; i < length; i++) 
+    {
+        int checkRow = horizontal ? r : r + i;
+        int checkCol = horizontal ? c + i : c;
+        
+        if (shipGrid[checkRow][checkCol] != ' ') 
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+    public void placeShip(int r, int c, int length, boolean horizontal) // places ship if valid and updates ship grid
+    {
+        if (canPlaceShip(r,c, length, horizontal))
         {
             for (int i = 0; i < length; i++) 
             {
-                shipGrid[r][c] = 'S';
+                shipGrid[r][c] = 'S';   // updates shipGrid to conatian information of where ships are
                 if (horizontal)
                 {
                     c++;
@@ -155,7 +156,8 @@ public class Board implements Serializable{
     }
 
     // Check if all ships in a list are sunk
-    public boolean allShipsSunk(java.util.List<Ship> ships) {
+    public boolean allShipsSunk(java.util.List<Ship> ships) 
+    {
         for (Ship s : ships)
         {
             if (!s.isSunk())
@@ -167,11 +169,14 @@ public class Board implements Serializable{
     }
     
     // Reset board (for new game)
-    public void reset() {
-        for (char[] row : infoGrid) {
+    public void reset() 
+    {
+        for (char[] row : infoGrid) 
+        {
             Arrays.fill(row, ' ');
         }
-        for (char[] row : shipGrid) {
+        for (char[] row : shipGrid) 
+        {
             Arrays.fill(row, ' ');
         }
     }

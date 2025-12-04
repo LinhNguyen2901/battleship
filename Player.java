@@ -1,3 +1,6 @@
+// Abstract base class for all players providing ship management, board access,
+// and automatic ship placement functionality
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
@@ -42,19 +45,21 @@ abstract class Player implements Serializable{
     }
     public void placeShipsAutomatically() 
     {
-        int[] shipSizes = {5, 4, 3, 3, 2}; // every user has 5 ships, this lists their sizes
+        int[] shipSizes = {5, 4, 3, 2}; // every user has 5 ships, this lists their sizes
         for (int size : shipSizes) 
         {
             placeShipAutomatically(size); // place each ship of size in shipSizes array
         }
     }
 
-    public ArrayList<Ship> getShips() {
+    public ArrayList<Ship> getShips() 
+    {
         return ships;
     }
     
     // Reset player
-    public void reset() {
+    public void reset() 
+    {
         ships.clear();
         board.reset();
     }

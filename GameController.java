@@ -1,3 +1,5 @@
+// Controls game flow including turn management, player switching, and win condition checking
+
 import java.io.Serializable;
 
 public class GameController implements Serializable {
@@ -21,7 +23,7 @@ public class GameController implements Serializable {
 
     /** 
      * Attempts to play a turn.
-     * @return "noMove" if human hasn't clicked;
+     * return "noMove" if human hasn't clicked;
      *         "turnDone" if turn finished;
      *         "gameOver" if opponent lost.
      */

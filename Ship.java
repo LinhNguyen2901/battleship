@@ -1,3 +1,6 @@
+// Represents individual ships tracking their length, position, orientation,
+// hit count, and whether they occupy specific board coordinates
+
 import java.io.Serializable;
 
 public class Ship implements Serializable
@@ -41,11 +44,13 @@ public class Ship implements Serializable
         return hits >= length; 
     }
     
-    public int getHits() {
+    public int getHits() 
+    {
         return hits;
     }
     
-    public void setHits(int h) {
+    public void setHits(int h) 
+    {
         hits = h;
     }
 

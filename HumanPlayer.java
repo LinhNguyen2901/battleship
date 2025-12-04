@@ -1,3 +1,6 @@
+// Human player implementation that receives shot coordinates from UI mouse clicks
+// and validates shots before executing them
+
 public class HumanPlayer extends Player
 {
     private int[] nextShot = null;  // Stores the next shot chosen by the human player
