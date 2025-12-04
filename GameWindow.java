@@ -712,7 +712,7 @@ private void playComputerTurn() {
                     shipColor = Color.RED;
                 }
                 
-                // Draw circle for each grid cell
+                // Draw circle for each grid celld
                 int circleSize = Math.min(width, height) - 2 * padding;
                 int x = (width - circleSize) / 2;
                 int y = (height - circleSize) / 2;

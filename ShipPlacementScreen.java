@@ -250,6 +250,7 @@ public class ShipPlacementScreen extends JFrame
                 col = c;
             }
             
+            @Override
             protected void paintComponent(Graphics g) 
             {
                 super.paintComponent(g);
@@ -261,7 +262,7 @@ public class ShipPlacementScreen extends JFrame
                 {
                     // Find which ship occupies this cell
                     int shipIndex = -1;
-                    for (int i = 0; i < ships.size(); i++) 
+                    for (int i = 0; i < ships.size(); i++)
                     {
                         if (ships.get(i).occupies(row, col)) 
                         {
@@ -281,17 +282,17 @@ public class ShipPlacementScreen extends JFrame
                 // Show preview while dragging a ship
                 if (draggedShip != null && draggedShip.isBeingDragged) 
                 {
-                    Point boardMouse = getMousePosition();
+                    Point boardMouse = BoardPanel.this.getMousePosition();
                     if (boardMouse != null) 
                     {
-                        Component hoverComp = getComponentAt(boardMouse);
+                        Component hoverComp = BoardPanel.this.getComponentAt(boardMouse);
                         if (hoverComp instanceof CellButton) 
                         {
                             CellButton hoverCell = (CellButton) hoverComp;
                             boolean canPlace = board.canPlaceShip(hoverCell.row, hoverCell.col, 
                                                                   draggedShip.length, draggedShip.horizontal);
                             
-                            // Check if this cell is part of the preview
+                            // Check if THIS cell is part of the preview
                             boolean isPreviewCell = false;
                             for (int i = 0; i < draggedShip.length; i++) 
                             {
@@ -315,7 +316,7 @@ public class ShipPlacementScreen extends JFrame
                 }
             }
         }
-    }
+    } //  End of BoardPanel class
     
     /**
      * Panel displaying draggable ship components that can be placed on the board
@@ -369,7 +370,7 @@ public class ShipPlacementScreen extends JFrame
             }
             repaint();
         }
-    }
+    } //  End of ShipSelectionPanel class
     
     /**
      * Component representing a draggable ship that can be placed on the board
@@ -471,6 +472,7 @@ public class ShipPlacementScreen extends JFrame
             repaint();
         }
         
+        @Override
         protected void paintComponent(Graphics g) 
         {
             super.paintComponent(g);
@@ -515,5 +517,5 @@ public class ShipPlacementScreen extends JFrame
                 }
             }
         }
-    }
-}
+    } 
+} 
