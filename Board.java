@@ -50,7 +50,8 @@ public class Board implements Serializable{
         infoGrid[r][c] = value; 
     }
 
-    public boolean inBounds(int r, int c) {
+    public boolean inBounds(int r, int c) 
+    {
         return r >= 0 && r < SIZE && c >= 0 && c < SIZE;
     }
 
@@ -155,7 +156,8 @@ public boolean canPlaceShip(int r, int c, int length, boolean horizontal) // ret
     }
 
     // Check if all ships in a list are sunk
-    public boolean allShipsSunk(java.util.List<Ship> ships) {
+    public boolean allShipsSunk(java.util.List<Ship> ships) 
+    {
         for (Ship s : ships)
         {
             if (!s.isSunk())
@@ -167,11 +169,14 @@ public boolean canPlaceShip(int r, int c, int length, boolean horizontal) // ret
     }
     
     // Reset board (for new game)
-    public void reset() {
-        for (char[] row : infoGrid) {
+    public void reset() 
+    {
+        for (char[] row : infoGrid) 
+        {
             Arrays.fill(row, ' ');
         }
-        for (char[] row : shipGrid) {
+        for (char[] row : shipGrid) 
+        {
             Arrays.fill(row, ' ');
         }
     }

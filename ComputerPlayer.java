@@ -1,5 +1,5 @@
 // AI player that makes strategic shots by targeting adjacent cells to hits,
-// falling back to random shots when no hits are available
+// detecting ship direction from consecutive hits, and pursuing along that direction
 
 import java.util.*;
 
@@ -9,37 +9,100 @@ public class ComputerPlayer extends Player
 
     public int[] chooseShot(char [][] opponentBoard) // returns move
     {
+        // First priority: Look for a line of 2+ hits (direction detected)
+        int[] directedShot = findDirectedShot(opponentBoard);
+        if (directedShot != null) {
+            return directedShot;
+        }
+        
+        // Second priority: Look for a single hit and shoot adjacent
+        int[] adjacentShot = findAdjacentToHit(opponentBoard);
+        if (adjacentShot != null) {
+            return adjacentShot;
+        }
+        
+        // No hits found, pick random cell
         int row, col;
-        // looks for a hit (that's not destroyed)
-        for (int r=0; r<10; r++)
-        {
-            for(int c=0; c<10; c++)
-            {
-                if(opponentBoard[r][c] == 'H')
-                // if there is a hit, next move will shoot grid coordinate above, below, left, or right of hit 
-                {
-                    row = r;
-                    col = c;
+        do {
+            row = rand.nextInt(Board.SIZE);
+            col = rand.nextInt(Board.SIZE);
+        } while (opponentBoard[row][col] != ' ');
+        return new int[]{row, col};
+    }
+    
+    /**
+     * Finds a shot along a detected ship direction (2+ consecutive hits)
+     */
+    private int[] findDirectedShot(char[][] board) {
+        // Look for horizontal lines of hits
+        for (int r = 0; r < 10; r++) {
+            for (int c = 0; c < 9; c++) {
+                // Found 2 consecutive horizontal hits
+                if (board[r][c] == 'H' && board[r][c + 1] == 'H') {
+                    // Try shooting to the right
+                    int endCol = c + 1;
+                    while (endCol < 9 && board[r][endCol + 1] == 'H') {
+                        endCol++; // Find the rightmost hit
+                    }
+                    if (endCol + 1 < 10 && board[r][endCol + 1] == ' ') {
+                        return new int[]{r, endCol + 1};
+                    }
                     
+                    // Try shooting to the left
+                    if (c - 1 >= 0 && board[r][c - 1] == ' ') {
+                        return new int[]{r, c - 1};
+                    }
+                }
+            }
+        }
+        
+        // Look for vertical lines of hits
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 10; c++) {
+                // Found 2 consecutive vertical hits
+                if (board[r][c] == 'H' && board[r + 1][c] == 'H') {
+                    // Try shooting downward
+                    int endRow = r + 1;
+                    while (endRow < 9 && board[endRow + 1][c] == 'H') {
+                        endRow++; // Find the bottommost hit
+                    }
+                    if (endRow + 1 < 10 && board[endRow + 1][c] == ' ') {
+                        return new int[]{endRow + 1, c};
+                    }
+                    
+                    // Try shooting upward
+                    if (r - 1 >= 0 && board[r - 1][c] == ' ') {
+                        return new int[]{r - 1, c};
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Finds a shot adjacent to a single hit (direction not yet known)
+     */
+    private int[] findAdjacentToHit(char[][] board) {
+        for (int r = 0; r < 10; r++) {
+            for (int c = 0; c < 10; c++) {
+                if (board[r][c] == 'H') {
                     // Try to find a valid adjacent cell
                     List<int[]> validMoves = new ArrayList<>();
                     
                     // Check all 4 directions
-                    // Below
-                    if (row + 1 < 10 && opponentBoard[row + 1][col] == ' ') {
-                        validMoves.add(new int[]{row + 1, col});
+                    if (r + 1 < 10 && board[r + 1][c] == ' ') {
+                        validMoves.add(new int[]{r + 1, c});
                     }
-                    // Above
-                    if (row - 1 >= 0 && opponentBoard[row - 1][col] == ' ') {
-                        validMoves.add(new int[]{row - 1, col});
+                    if (r - 1 >= 0 && board[r - 1][c] == ' ') {
+                        validMoves.add(new int[]{r - 1, c});
                     }
-                    // Right
-                    if (col + 1 < 10 && opponentBoard[row][col + 1] == ' ') {
-                        validMoves.add(new int[]{row, col + 1});
+                    if (c + 1 < 10 && board[r][c + 1] == ' ') {
+                        validMoves.add(new int[]{r, c + 1});
                     }
-                    // Left
-                    if (col - 1 >= 0 && opponentBoard[row][col - 1] == ' ') {
-                        validMoves.add(new int[]{row, col - 1});
+                    if (c - 1 >= 0 && board[r][c - 1] == ' ') {
+                        validMoves.add(new int[]{r, c - 1});
                     }
                     
                     // If there are valid moves adjacent to this hit, pick one randomly
@@ -47,16 +110,10 @@ public class ComputerPlayer extends Player
                         int randomIndex = rand.nextInt(validMoves.size());
                         return validMoves.get(randomIndex);
                     }
-                    // Otherwise, continue searching for another hit with available adjacent cells
                 }
             }
         }
- 
-        // No hits found or no valid adjacent cells, pick random cell
-        do {
-            row = rand.nextInt(Board.SIZE);      // generate random row
-            col = rand.nextInt(Board.SIZE);      // generate random column
-        } while (opponentBoard[row][col] != ' '); //find empty cell
-        return new int[]{row, col};               // return location
+        
+        return null;
     }
 }

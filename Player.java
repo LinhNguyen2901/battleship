@@ -52,12 +52,14 @@ abstract class Player implements Serializable{
         }
     }
 
-    public ArrayList<Ship> getShips() {
+    public ArrayList<Ship> getShips() 
+    {
         return ships;
     }
     
     // Reset player
-    public void reset() {
+    public void reset() 
+    {
         ships.clear();
         board.reset();
     }

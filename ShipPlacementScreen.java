@@ -6,7 +6,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
-public class ShipPlacementScreen extends JFrame {
+public class ShipPlacementScreen extends JFrame 
+{
     private Board board;
     private ArrayList<Ship> ships;
     private BoardPanel boardPanel;
@@ -17,7 +18,7 @@ public class ShipPlacementScreen extends JFrame {
     private boolean isPlayer1;
     private Runnable onComplete;
     
-    // Ship sizes for battleship
+    // Ship sizes and display information for battleship
     private int[] shipSizes = {5, 4, 3, 2};
     private String[] shipNames = {"Carrier (5)", "Battleship (4)", "Cruiser (3)", "Destroyer (2)"};
     private Color[] shipColors = {
@@ -28,9 +29,15 @@ public class ShipPlacementScreen extends JFrame {
         new Color(200, 100, 150)   // Pink
     };
 
-    public ShipPlacementScreen(boolean isPlayer1, Runnable onComplete) {
-        this.isPlayer1 = isPlayer1;
-        this.onComplete = onComplete;
+    /**
+     * Constructor initializes the ship placement screen for a player
+     * isPlayer1 true if this is player 1, false if player 2
+     * onComplete callback to run when ship placement is confirmed
+     */
+    public ShipPlacementScreen(boolean isP1, Runnable onComp) 
+    {
+        isPlayer1 = isP1;
+        onComplete = onComp;
         this.board = new Board();
         this.ships = new ArrayList<>();
         
@@ -44,7 +51,11 @@ public class ShipPlacementScreen extends JFrame {
         setVisible(true);
     }
     
-    private void setupUI() {
+    /**
+     * Sets up all UI components including title, board, ship selection panel, and buttons
+     */
+    private void setupUI() 
+    {
         // Top panel with instructions
         JPanel topPanel = new JPanel(new BorderLayout());
         JLabel titleLabel = new JLabel("Player " + (isPlayer1 ? "1" : "2") + " - Place Your Ships", SwingConstants.CENTER);
@@ -95,7 +106,11 @@ public class ShipPlacementScreen extends JFrame {
         add(buttonPanel, BorderLayout.SOUTH);
     }
     
-    private void clearAllShips() {
+    /**
+     * Clears all placed ships from the board and resets the UI
+     */
+    private void clearAllShips() 
+    {
         ships.clear();
         board.reset();
         boardPanel.repaint();
@@ -103,18 +118,26 @@ public class ShipPlacementScreen extends JFrame {
         confirmButton.setEnabled(false);
     }
     
-    private void placeShipsRandomly() {
+    /**
+     * Randomly places all ships on the board
+     */
+    private void placeShipsRandomly() 
+    {
         clearAllShips();
         
         java.util.Random rand = new java.util.Random();
-        for (int i = 0; i < shipSizes.length; i++) {
+        for (int i = 0; i < shipSizes.length; i++) 
+        {
             int size = shipSizes[i];
             boolean placed = false;
-            while (!placed) {
+            // Keep trying random positions until ship fits
+            while (!placed) 
+            {
                 boolean horizontal = rand.nextBoolean();
                 int r = rand.nextInt(Board.SIZE);
                 int c = rand.nextInt(Board.SIZE);
-                if (board.canPlaceShip(r, c, size, horizontal)) {
+                if (board.canPlaceShip(r, c, size, horizontal)) 
+                {
                     board.placeShip(r, c, size, horizontal);
                     Ship s = new Ship(size, r, c, horizontal);
                     ships.add(s);
@@ -128,32 +151,47 @@ public class ShipPlacementScreen extends JFrame {
         confirmButton.setEnabled(true);
     }
     
-    private void confirmPlacement() {
-        if (onComplete != null) {
+    /**
+     * Confirms ship placement and executes the completion callback
+     */
+    private void confirmPlacement() 
+    {
+        if (onComplete != null) 
+        {
             onComplete.run();
         }
         dispose();
     }
     
-    public Board getBoard() {
+    public Board getBoard() 
+    {
         return board;
     }
     
-    public ArrayList<Ship> getShips() {
+    public ArrayList<Ship> getShips() 
+    {
         return ships;
     }
     
-    private class BoardPanel extends JPanel {
+    /**
+     * Panel displaying the 10x10 game board for ship placement
+     */
+    private class BoardPanel extends JPanel 
+    {
         private CellButton[][] buttons = new CellButton[10][10];
         private DraggableShipComponent draggedShip = null;
         
-        public BoardPanel() {
+        public BoardPanel() 
+        {
             setLayout(new GridLayout(10, 10));
             setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             setPreferredSize(new Dimension(500, 500));
             
-            for (int r = 0; r < 10; r++) {
-                for (int c = 0; c < 10; c++) {
+            // Create all cell buttons
+            for (int r = 0; r < 10; r++) 
+            {
+                for (int c = 0; c < 10; c++) 
+                {
                     CellButton btn = new CellButton(r, c);
                     btn.setBackground(Color.WHITE);
                     btn.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
@@ -164,22 +202,31 @@ public class ShipPlacementScreen extends JFrame {
             }
         }
         
-        public boolean tryPlaceShip(DraggableShipComponent dragShip, Point dropPoint) {
+        /**
+         * Attempts to place a dragged ship at the drop location
+         * return true if ship was successfully placed, false otherwise
+         */
+        public boolean tryPlaceShip(DraggableShipComponent dragShip, Point dropPoint) 
+        {
             // Convert point to grid coordinates
             Component comp = getComponentAt(dropPoint);
-            if (comp instanceof CellButton) {
+            if (comp instanceof CellButton) 
+            {
                 CellButton cell = (CellButton) comp;
                 int gridRow = cell.row;
                 int gridCol = cell.col;
                 
-                if (board.canPlaceShip(gridRow, gridCol, dragShip.length, dragShip.horizontal)) {
+                // Validate and place ship
+                if (board.canPlaceShip(gridRow, gridCol, dragShip.length, dragShip.horizontal)) 
+                {
                     board.placeShip(gridRow, gridCol, dragShip.length, dragShip.horizontal);
                     Ship ship = new Ship(dragShip.length, gridRow, gridCol, dragShip.horizontal);
                     ships.add(ship);
                     repaint();
                     
-                    // Check if all ships placed
-                    if (ships.size() == shipSizes.length) {
+                    // Enable confirm button when all ships are placed
+                    if (ships.size() == shipSizes.length) 
+                    {
                         confirmButton.setEnabled(true);
                         JOptionPane.showMessageDialog(ShipPlacementScreen.this, 
                             "All ships placed! Click 'Confirm' to continue.");
@@ -190,26 +237,34 @@ public class ShipPlacementScreen extends JFrame {
             return false;
         }
         
-        private class CellButton extends JButton {
+        /**
+         * Individual cell button on the game board
+         */
+        private class CellButton extends JButton 
+        {
             int row, col;
             
-            public CellButton(int r, int c) {
-                this.row = r;
-                this.col = c;
+            public CellButton(int r, int c) 
+            {
+                row = r;
+                col = c;
             }
             
-            @Override
-            protected void paintComponent(Graphics g) {
+            protected void paintComponent(Graphics g) 
+            {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 
-                // Draw placed ships
-                if (board.getShipCoord(row, col) == 'S') {
-                    // Find which ship this belongs to
+                // Draw placed ships as colored circles
+                if (board.getShipCoord(row, col) == 'S') 
+                {
+                    // Find which ship occupies this cell
                     int shipIndex = -1;
-                    for (int i = 0; i < ships.size(); i++) {
-                        if (ships.get(i).occupies(row, col)) {
+                    for (int i = 0; i < ships.size(); i++) 
+                    {
+                        if (ships.get(i).occupies(row, col)) 
+                        {
                             shipIndex = i;
                             break;
                         }
@@ -223,28 +278,35 @@ public class ShipPlacementScreen extends JFrame {
                     g2d.fillOval(padding, padding, size - 2*padding, size - 2*padding);
                 }
                 
-                // Show preview if dragging
-                if (draggedShip != null && draggedShip.isBeingDragged) {
+                // Show preview while dragging a ship
+                if (draggedShip != null && draggedShip.isBeingDragged) 
+                {
                     Point boardMouse = getMousePosition();
-                    if (boardMouse != null) {
+                    if (boardMouse != null) 
+                    {
                         Component hoverComp = getComponentAt(boardMouse);
-                        if (hoverComp instanceof CellButton) {
+                        if (hoverComp instanceof CellButton) 
+                        {
                             CellButton hoverCell = (CellButton) hoverComp;
                             boolean canPlace = board.canPlaceShip(hoverCell.row, hoverCell.col, 
                                                                   draggedShip.length, draggedShip.horizontal);
                             
                             // Check if this cell is part of the preview
                             boolean isPreviewCell = false;
-                            for (int i = 0; i < draggedShip.length; i++) {
+                            for (int i = 0; i < draggedShip.length; i++) 
+                            {
                                 int previewRow = draggedShip.horizontal ? hoverCell.row : hoverCell.row + i;
                                 int previewCol = draggedShip.horizontal ? hoverCell.col + i : hoverCell.col;
-                                if (previewRow == this.row && previewCol == this.col) {
+                                if (previewRow == this.row && previewCol == this.col) 
+                                {
                                     isPreviewCell = true;
                                     break;
                                 }
                             }
                             
-                            if (isPreviewCell) {
+                            // Draw green for valid placement, red for invalid
+                            if (isPreviewCell) 
+                            {
                                 g2d.setColor(canPlace ? new Color(100, 255, 100, 100) : new Color(255, 100, 100, 100));
                                 g2d.fillRect(0, 0, getWidth(), getHeight());
                             }
@@ -255,17 +317,24 @@ public class ShipPlacementScreen extends JFrame {
         }
     }
     
-    private class ShipSelectionPanel extends JPanel {
+    /**
+     * Panel displaying draggable ship components that can be placed on the board
+     */
+    private class ShipSelectionPanel extends JPanel 
+    {
         private ArrayList<DraggableShipComponent> draggableShips;
         
-        public ShipSelectionPanel() {
+        public ShipSelectionPanel() 
+        {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setBorder(BorderFactory.createTitledBorder("Ships to Place"));
             setPreferredSize(new Dimension(220, 600));
             
             draggableShips = new ArrayList<>();
             
-            for (int i = 0; i < shipSizes.length; i++) {
+            // Create draggable ship component for each ship
+            for (int i = 0; i < shipSizes.length; i++) 
+            {
                 DraggableShipComponent ship = new DraggableShipComponent(
                     shipSizes[i], shipNames[i], shipColors[i], this
                 );
@@ -277,22 +346,37 @@ public class ShipPlacementScreen extends JFrame {
             }
         }
         
-        public void resetShips() {
-            for (DraggableShipComponent ship : draggableShips) {
+        /**
+         * Resets all ships to unplaced state
+         */
+        public void resetShips() 
+        {
+            for (DraggableShipComponent ship : draggableShips) 
+            {
                 ship.reset();
             }
             repaint();
         }
         
-        public void allShipsPlaced() {
-            for (DraggableShipComponent ship : draggableShips) {
+        /**
+         * Marks all ships as placed (used when random placement is clicked)
+         */
+        public void allShipsPlaced() 
+        {
+            for (DraggableShipComponent ship : draggableShips) 
+            {
                 ship.setPlaced(true);
             }
             repaint();
         }
     }
     
-    private class DraggableShipComponent extends JPanel {
+    /**
+     * Component representing a draggable ship that can be placed on the board
+     * Supports drag-and-drop and right-click rotation
+     */
+    private class DraggableShipComponent extends JPanel 
+    {
         int length;
         String name;
         Color color;
@@ -300,10 +384,11 @@ public class ShipPlacementScreen extends JFrame {
         boolean placed = false;
         boolean isBeingDragged = false;
         
-        public DraggableShipComponent(int length, String name, Color color, ShipSelectionPanel parent) {
-            this.length = length;
-            this.name = name;
-            this.color = color;
+        public DraggableShipComponent(int l, String n, Color c, ShipSelectionPanel parent) 
+        {
+            length = l;
+            name = n;
+            color = c;
             
             setPreferredSize(new Dimension(200, 70));
             setMaximumSize(new Dimension(200, 70));
@@ -311,24 +396,33 @@ public class ShipPlacementScreen extends JFrame {
             setBackground(Color.WHITE);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             
-            MouseAdapter mouseHandler = new MouseAdapter() {
+            // Handle mouse events for drag-and-drop
+            MouseAdapter mouseHandler = new MouseAdapter() 
+            {
                 
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    if (!placed) {
-                        if (SwingUtilities.isRightMouseButton(e)) {
+                public void mousePressed(MouseEvent e) 
+                {
+                    if (!placed) 
+                    {
+                        // Right-click rotates the ship
+                        if (SwingUtilities.isRightMouseButton(e))
+                        {
                             horizontal = !horizontal;
                             repaint();
-                        } else {
+                        } 
+                        else 
+                        {
+                            // Left-click starts dragging
                             isBeingDragged = true;
                             boardPanel.draggedShip = DraggableShipComponent.this;
                         }
                     }
                 }
                 
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    if (isBeingDragged) {
+                public void mouseReleased(MouseEvent e) 
+                {
+                    if (isBeingDragged) 
+                    {
                         isBeingDragged = false;
                         
                         // Convert mouse position to board coordinates
@@ -336,7 +430,9 @@ public class ShipPlacementScreen extends JFrame {
                             DraggableShipComponent.this, e.getPoint(), boardPanel
                         );
                         
-                        if (boardPanel.tryPlaceShip(DraggableShipComponent.this, panelPoint)) {
+                        // Try to place ship at drop location
+                        if (boardPanel.tryPlaceShip(DraggableShipComponent.this, panelPoint)) 
+                        {
                             placed = true;
                         }
                         
@@ -346,10 +442,11 @@ public class ShipPlacementScreen extends JFrame {
                     }
                 }
                 
-                @Override
-                public void mouseDragged(MouseEvent e) {
-                    if (isBeingDragged) {
-                        boardPanel.repaint();
+                public void mouseDragged(MouseEvent e) 
+                {
+                    if (isBeingDragged) 
+                    {
+                        boardPanel.repaint(); // Update preview
                     }
                 }
             };
@@ -358,45 +455,61 @@ public class ShipPlacementScreen extends JFrame {
             addMouseMotionListener(mouseHandler);
         }
         
-        public void reset() {
+        /**
+         * Resets ship to unplaced and horizontal state
+         */
+        public void reset() 
+        {
             placed = false;
             horizontal = true;
             repaint();
         }
         
-        public void setPlaced(boolean p) {
+        public void setPlaced(boolean p) 
+        {
             placed = p;
             repaint();
         }
         
-        @Override
-        protected void paintComponent(Graphics g) {
+        protected void paintComponent(Graphics g) 
+        {
             super.paintComponent(g);
             Graphics2D g2d = (Graphics2D) g;
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
-            if (placed) {
+            if (placed) 
+            {
+                // Show checkmark when placed
                 g2d.setColor(Color.LIGHT_GRAY);
                 g2d.setFont(new Font("Arial", Font.ITALIC, 12));
                 g2d.drawString("✓ " + name + " - Placed", 10, 35);
-            } else {
-                // Draw label
+            } 
+            else 
+            {
+                // Draw ship name
                 g2d.setColor(Color.BLACK);
                 g2d.setFont(new Font("Arial", Font.BOLD, 12));
                 g2d.drawString(name, 10, 15);
                 
-                // Draw ship circles
+                // Draw ship as colored circles
                 int circleSize = 25;
                 int startX = 10;
                 int startY = 25;
                 
                 g2d.setColor(color);
-                if (horizontal) {
-                    for (int i = 0; i < length; i++) {
+                if (horizontal) 
+                {
+                    // Draw circles horizontally
+                    for (int i = 0; i < length; i++) 
+                    {
                         g2d.fillOval(startX + i * (circleSize + 2), startY, circleSize, circleSize);
                     }
-                } else {
-                    for (int i = 0; i < length; i++) {
+                } 
+                else 
+                {
+                    // Draw circles vertically
+                    for (int i = 0; i < length; i++) 
+                    {
                         g2d.fillOval(startX, startY + i * (circleSize + 2), circleSize, circleSize);
                     }
                 }
