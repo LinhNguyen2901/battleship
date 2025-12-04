@@ -11,6 +11,7 @@ public class GameWindow extends JFrame {
     private JLabel statusLabel;
     private JLabel shipsInfoLabel;
     private JButton switchButton;
+    private JPanel boardsPanel;            // Reference to boards panel for overlay
 
     public GameWindow(GameController controller) {
         this.controller = controller;
@@ -31,7 +32,7 @@ public class GameWindow extends JFrame {
         add(topPanel, BorderLayout.NORTH);
 
         // Middle panel: boards side by side
-        JPanel boardsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+        boardsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         boardsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
         // Left board: ship board of the current player
@@ -292,60 +293,6 @@ public class GameWindow extends JFrame {
         updateStatus();
     }
 
-    // Show a full-screen overlay covering the application window for delayMs milliseconds.
-    // Disables the owner window while the overlay is visible to prevent peeking.
-    private void showFullScreenOverlay(String message, int delayMs, Runnable onComplete) {
-        final JFrame owner = this; // use this frame directly
-
-        try {
-            Point loc = owner.getLocationOnScreen();
-            Dimension size = owner.getSize();
-
-            // disable owner to prevent interaction
-            owner.setEnabled(false);
-
-            final JWindow overlay = new JWindow(owner);
-            overlay.setBackground(Color.BLACK);
-            JPanel panel = new JPanel(new GridBagLayout());
-            panel.setBackground(Color.BLACK);
-            JLabel lbl = new JLabel(message, SwingConstants.CENTER);
-            lbl.setForeground(Color.WHITE);
-            lbl.setFont(new Font("Arial", Font.BOLD, 36));
-            panel.add(lbl);
-            overlay.getContentPane().add(panel);
-            overlay.setBounds(loc.x, loc.y, size.width, size.height);
-            overlay.setAlwaysOnTop(true);
-            overlay.setFocusableWindowState(false);
-            overlay.validate(); overlay.repaint(); overlay.setVisible(true);
-
-            javax.swing.Timer timer = new javax.swing.Timer(delayMs, e -> {
-                overlay.setVisible(false);
-                overlay.dispose();
-                owner.setEnabled(true);
-                if (onComplete != null) SwingUtilities.invokeLater(onComplete);
-            });
-            timer.setRepeats(false);
-            timer.start();
-        } catch (IllegalComponentStateException ex) {
-            // fallback to glass pane overlay sized to the window
-            final JComponent glass = (JComponent) owner.getGlassPane();
-            JPanel overlay = new JPanel(new BorderLayout());
-            overlay.setBackground(Color.BLACK);
-            JLabel lbl = new JLabel(message, SwingConstants.CENTER);
-            lbl.setForeground(Color.WHITE);
-            lbl.setFont(new Font("Arial", Font.BOLD, 36));
-            overlay.add(lbl, BorderLayout.CENTER);
-            glass.setLayout(new BorderLayout());
-            glass.removeAll();
-            glass.add(overlay, BorderLayout.CENTER);
-            glass.setVisible(true);
-            javax.swing.Timer timer = new javax.swing.Timer(delayMs, e -> {
-                glass.setVisible(false); glass.removeAll(); owner.setEnabled(true); if (onComplete!=null) SwingUtilities.invokeLater(onComplete);
-            });
-            timer.setRepeats(false); timer.start();
-        }
-    }
-
 
     private void updateStatus() {
         Player current = controller.getCurrentPlayer();
@@ -367,6 +314,32 @@ public class GameWindow extends JFrame {
         }
         // Enable new game button
         switchButton.setEnabled(true);
+    }
+
+    private void showSwitchPlayerScreen() {
+        SwitchPlayerScreen screen = new SwitchPlayerScreen(controller, () -> {
+            // Hide the overlay
+            JComponent glassPane = (JComponent) getGlassPane();
+            glassPane.setVisible(false);
+            myBoardPanel.setEnabled(true);
+            opponentBoardPanel.setEnabled(true);
+            myBoardPanel.updateBoard();
+            opponentBoardPanel.updateBoard();
+            updateStatus();
+        });
+        
+        // Use glass pane to overlay entire window
+        JComponent glassPane = (JComponent) getGlassPane();
+        glassPane.setLayout(new BorderLayout());
+        glassPane.removeAll();
+        glassPane.add(screen, BorderLayout.CENTER);
+        glassPane.setVisible(true);
+        glassPane.revalidate();
+        glassPane.repaint();
+        
+        // Disable interaction with main window
+        myBoardPanel.setEnabled(false);
+        opponentBoardPanel.setEnabled(false);
     }
 
     private String getShipsInfo(Player player) {
@@ -447,16 +420,8 @@ public class GameWindow extends JFrame {
                 boolean sunk = updatedView[r][c] == 'D';
                 boolean hit = updatedView[r][c] == 'H' || updatedView[r][c] == 'D';
                 
-                // If hit, update board display
-                if (hit) {
-                    controller.switchPlayers(); 
-                    opponentBoardPanel.updateBoard();
-                    controller.switchPlayers();
-                }
-                
                 // Display result message
                 if (result.equals("gameOver")) {
-                    controller.switchPlayers();
                     myBoardPanel.updateBoard();
                     opponentBoardPanel.updateBoard();
                     opponentBoardPanel.setEnabled(false);
@@ -479,17 +444,13 @@ public class GameWindow extends JFrame {
                         JOptionPane.DEFAULT_OPTION,
                         JOptionPane.INFORMATION_MESSAGE,
                         null,
-                        new Object[]{"Switch Player"},   // <-- custom button text
-                        "Switch Player"
+                        new Object[]{"OK"},
+                        "OK"
                     );
 
                     if (choice == 0) {
-                        // Show a full-window overlay for 2 seconds while players switch
-                        showFullScreenOverlay("Switching player...", 2000, () -> {
-                            myBoardPanel.updateBoard();
-                            opponentBoardPanel.updateBoard();
-                            updateStatus();
-                        });
+                        // Show switch player screen with button to continue
+                        showSwitchPlayerScreen();
                     }
                 }
             }
