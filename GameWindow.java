@@ -481,6 +481,9 @@ private void handleClick(int r, int c) {
         boolean sunk = updatedView[r][c] == 'D';
         boolean hit = updatedView[r][c] == 'H' || updatedView[r][c] == 'D';
         
+        controller.switchPlayers();
+        opponentBoardPanel.updateBoard();
+        controller.switchPlayers();
         // Display result message
         if (result.equals("gameOver")) {
             myBoardPanel.updateBoard();
@@ -550,7 +553,7 @@ private void playComputerTurn() {
             opponentBoardLabel.setText("Your Board");
             
             opponentBoardPanel.setEnabled(false);
-            statusLabel.setText("💀 Game Over - Computer Wins! 💀");
+            statusLabel.setText("Game Over - Computer Wins!");
             
             // Fix the ships info to show correct perspective
             int humanRemaining = countRemainingShips(controller.getCurrentPlayer());
