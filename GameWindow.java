@@ -420,6 +420,11 @@ public class GameWindow extends JFrame {
                 boolean sunk = updatedView[r][c] == 'D';
                 boolean hit = updatedView[r][c] == 'H' || updatedView[r][c] == 'D';
                 
+                // Switch back to show the shot on opponent board, then switch again
+                controller.switchPlayers();
+                opponentBoardPanel.updateBoard();
+                controller.switchPlayers();
+                
                 // Display result message
                 if (result.equals("gameOver")) {
                     myBoardPanel.updateBoard();
