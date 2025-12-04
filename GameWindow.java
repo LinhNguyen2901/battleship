@@ -1,5 +1,4 @@
-// Main game window displaying both player boards, status information, and handling
-// user interactions including shooting, turn management, and save/load functionality
+// Main game window which displays both boards and can make guesses
 
 import javax.swing.*;
 import javax.swing.Timer;
