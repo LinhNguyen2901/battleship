@@ -1,4 +1,5 @@
-//  allows players to place their 4 ships on a 10x10 grid by dragging them from a side panel onto the board
+// Interactive UI for players to place their 4 ships on the board using drag-and-drop,
+// with options for manual placement, rotation, random placement, and validation
 
 import javax.swing.*;
 import java.awt.*;
@@ -298,13 +299,11 @@ public class ShipPlacementScreen extends JFrame {
         boolean horizontal = true;
         boolean placed = false;
         boolean isBeingDragged = false;
-        ShipSelectionPanel parent;
         
         public DraggableShipComponent(int length, String name, Color color, ShipSelectionPanel parent) {
             this.length = length;
             this.name = name;
             this.color = color;
-            this.parent = parent;
             
             setPreferredSize(new Dimension(200, 70));
             setMaximumSize(new Dimension(200, 70));
@@ -313,7 +312,6 @@ public class ShipPlacementScreen extends JFrame {
             setCursor(new Cursor(Cursor.HAND_CURSOR));
             
             MouseAdapter mouseHandler = new MouseAdapter() {
-                private Point dragStart;
                 
                 @Override
                 public void mousePressed(MouseEvent e) {
@@ -323,7 +321,6 @@ public class ShipPlacementScreen extends JFrame {
                             repaint();
                         } else {
                             isBeingDragged = true;
-                            dragStart = e.getPoint();
                             boardPanel.draggedShip = DraggableShipComponent.this;
                         }
                     }

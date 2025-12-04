@@ -1,4 +1,5 @@
-// Main game GUI with two boards and save/load functionality
+// Main game window displaying both player boards, status information, and handling
+// user interactions including shooting, turn management, and save/load functionality
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -15,6 +16,8 @@ public class GameWindow extends JFrame {
     private JLabel shipsInfoLabel;
     private JButton switchButton;
     private JPanel boardsPanel;            // Reference to boards panel for overlay
+    private JLabel myBoardLabel;
+    private JLabel opponentBoardLabel;
 
     public GameWindow(GameController controller) {
         this.controller = controller;
@@ -40,7 +43,7 @@ public class GameWindow extends JFrame {
         
         // Left board: ship board of the current player
         JPanel leftPanel = new JPanel(new BorderLayout());
-        JLabel myBoardLabel = new JLabel("Your Ships", SwingConstants.CENTER);
+        myBoardLabel = new JLabel("Your Ships", SwingConstants.CENTER);
         myBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); 
         leftPanel.add(myBoardLabel, BorderLayout.NORTH);
         myBoardPanel = new BoardPanel(controller, true); // true = player's ship board
@@ -49,7 +52,7 @@ public class GameWindow extends JFrame {
 
         // Right board: guess board
         JPanel rightPanel = new JPanel(new BorderLayout());
-        JLabel opponentBoardLabel = new JLabel("Opponent Board (Click to shoot)", SwingConstants.CENTER);
+        opponentBoardLabel = new JLabel("Opponent Board (Click to shoot)", SwingConstants.CENTER);
         opponentBoardLabel.setFont(new Font("Arial", Font.BOLD, 18)); 
         rightPanel.add(opponentBoardLabel, BorderLayout.NORTH);
         opponentBoardPanel = new BoardPanel(controller, false); // false = opponent guess board
@@ -321,45 +324,58 @@ private void startNewGameWindow(GameController newController)
 }
 
 
-    private void updateStatus() {
-        Player current = controller.getCurrentPlayer();
-        Player opponent = controller.getOpponent();
-        int currentPlayerNumber = (current == controller.getPlayer1()) ? 1 : 2;
-        int myShipsRemaining = countRemainingShips(current);
-        int opponentShipsRemaining = countRemainingShips(opponent);
-        String shipsInfo = getShipsInfo(current);
+private void updateStatus() 
+{
+    Player current = controller.getCurrentPlayer();
+    Player opponent = controller.getOpponent();
+    int currentPlayerNumber = (current == controller.getPlayer1()) ? 1 : 2;
+    int myShipsRemaining = countRemainingShips(current);
+    int opponentShipsRemaining = countRemainingShips(opponent);
+    String shipsInfo = getShipsInfo(current);
 
-        // Check win/lose
-        if (opponent.getBoard().allShipsSunk(opponent.getShips())) 
-        {
-            if (opponent.getBoard().allShipsSunk(opponent.getShips())) 
-            {
-                if (current instanceof ComputerPlayer) 
-                {
-                    statusLabel.setText("💀 Game Over - Computer Wins! 💀");
-                } 
-                else
-                {
-                    statusLabel.setText("🎉 Congratulations! You Win! 🎉");
-                }
-            }
-            shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Remaining: " + myShipsRemaining);
-            opponentBoardPanel.setEnabled(false);
+    // Update board labels - always from human player's perspective in vs Computer mode
+    boolean isVsComputer = (controller.getPlayer1() instanceof ComputerPlayer || 
+                       controller.getPlayer2() instanceof ComputerPlayer);
+    if (isVsComputer) 
+    {
+        // Check who the current player is to determine board perspective
+        if (current instanceof ComputerPlayer) {
+            // Boards are from computer's view
+            myBoardLabel.setText("Computer Board");
+            opponentBoardLabel.setText("Your Ships");
         } else {
-            if (current instanceof ComputerPlayer) 
-            {
-                statusLabel.setText("Computer's Turn");
-            } 
-            else 
-            {
-                statusLabel.setText("Player " + currentPlayerNumber + "'s Turn");
-            }
-            shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Your remaining: " + myShipsRemaining + 
-                                   " | Opponent remaining: " + opponentShipsRemaining);
+            // Boards are from human's view
+            myBoardLabel.setText("Your Ships");
+            opponentBoardLabel.setText("Computer Board");
         }
-        // Enable new game button
-        switchButton.setEnabled(true);
+    } 
+    else 
+    {
+        // Human vs Human
+        myBoardLabel.setText("Your Ships");
+        opponentBoardLabel.setText("Opponent Board");
     }
+
+    // Check win/lose
+    if (opponent.getBoard().allShipsSunk(opponent.getShips())) {
+        if (current instanceof ComputerPlayer) {
+            statusLabel.setText("💀 Game Over - Computer Wins! 💀");
+        } else {
+            statusLabel.setText("🎉 Congratulations! You Win! 🎉");
+        }
+        shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Remaining: " + myShipsRemaining);
+        opponentBoardPanel.setEnabled(false);
+    } else {
+        if (current instanceof ComputerPlayer) {
+            statusLabel.setText("Computer's Turn");
+        } else {
+            statusLabel.setText("Player " + currentPlayerNumber + "'s Turn");
+        }
+        shipsInfoLabel.setText("Your ships: " + shipsInfo + " | Your remaining: " + myShipsRemaining + 
+                               " | Opponent remaining: " + opponentShipsRemaining);
+    }
+    switchButton.setEnabled(true);
+}
 
     private void showSwitchPlayerScreen() {
         SwitchPlayerScreen screen = new SwitchPlayerScreen(controller, () -> {
@@ -511,7 +527,7 @@ private void playComputerTurn() {
     // Disable opponent board during computer's turn
     opponentBoardPanel.setEnabled(false);
     
-    // Manually set status for computer's turn (but keep player 1's board showing)
+    // Manually set status for computer's turn
     statusLabel.setText("Computer's Turn");
     Player humanPlayer = controller.getOpponent();
     int humanShipsRemaining = countRemainingShips(humanPlayer);
@@ -523,14 +539,25 @@ private void playComputerTurn() {
     Timer timer = new Timer(2000, e -> {
         String result = controller.takeTurn();
         
-        // After takeTurn, current player is now human again
-        // Just update the boards normally
+        // Update boards (they will show from human's perspective after takeTurn switches)
         myBoardPanel.updateBoard();
         opponentBoardPanel.updateBoard();
         
         if (result.equals("gameOver")) {
+            // Computer won - boards are now from human's perspective (switched back)
+            // But we need to flip the labels because computer just won
+            myBoardLabel.setText("Computer Board");
+            opponentBoardLabel.setText("Your Board");
+            
             opponentBoardPanel.setEnabled(false);
             statusLabel.setText("💀 Game Over - Computer Wins! 💀");
+            
+            // Fix the ships info to show correct perspective
+            int humanRemaining = countRemainingShips(controller.getCurrentPlayer());
+            int computerRemaining = countRemainingShips(controller.getOpponent());
+            shipsInfoLabel.setText("Your remaining: " + humanRemaining + 
+                                   " | Computer remaining: " + computerRemaining);
+            
             JOptionPane.showMessageDialog(GameWindow.this, 
                 "Game Over! Computer WINS!");
         } else {

@@ -1,4 +1,5 @@
-//  Computer player that makes random moves and chooses adjacent squares to hits
+// AI player that makes strategic shots by targeting adjacent cells to hits,
+// falling back to random shots when no hits are available
 
 import java.util.*;
 

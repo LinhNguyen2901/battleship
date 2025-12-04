@@ -1,4 +1,5 @@
-//  Overlay screen for switching between players
+// Overlay screen displayed between turns in Human vs Human mode, prompting
+// the next player to begin their turn while hiding the previous player's information
 
 import javax.swing.*;
 import java.awt.*;

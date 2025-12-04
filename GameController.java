@@ -1,4 +1,4 @@
-// Controls game flow and turn management
+// Controls game flow including turn management, player switching, and win condition checking
 
 import java.io.Serializable;
 

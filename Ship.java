@@ -1,4 +1,5 @@
-// Represents individual ships with hit tracking
+// Represents individual ships tracking their length, position, orientation,
+// hit count, and whether they occupy specific board coordinates
 
 import java.io.Serializable;
 

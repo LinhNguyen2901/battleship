@@ -1,4 +1,5 @@
-// Player class. Parent of ComputerPlaya and HumanPlayer
+// Abstract base class for all players providing ship management, board access,
+// and automatic ship placement functionality
 
 import java.io.Serializable;
 import java.util.ArrayList;

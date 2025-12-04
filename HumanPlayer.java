@@ -1,4 +1,5 @@
-//  Human player that uses input to choose move
+// Human player implementation that receives shot coordinates from UI mouse clicks
+// and validates shots before executing them
 
 public class HumanPlayer extends Player
 {

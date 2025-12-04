@@ -1,3 +1,6 @@
+// Game start menu allowing players to choose between Human vs Human or
+// Human vs Computer game modes before ship placement begins
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -130,7 +133,7 @@ public class StartScreen extends JFrame {
     }
     
     private void showPlayer1Placement() {
-        ShipPlacementScreen placement1 = new ShipPlacementScreen(true, () -> {
+        new ShipPlacementScreen(true, () -> {
             // Store reference to the screen BEFORE it closes
             ShipPlacementScreen currentScreen = null;
             for (Window window : Window.getWindows()) {
@@ -162,7 +165,7 @@ public class StartScreen extends JFrame {
     }
     
     private void showPlayer2Placement() {
-        ShipPlacementScreen placement2 = new ShipPlacementScreen(false, () -> {
+        new ShipPlacementScreen(false, () -> {
             // Store reference to the screen BEFORE it closes
             ShipPlacementScreen currentScreen = null;
             for (Window window : Window.getWindows()) {

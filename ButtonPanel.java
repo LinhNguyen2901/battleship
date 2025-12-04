@@ -1,4 +1,4 @@
-// UI panel with Home, Save, Load, and New Game buttons
+// UI panel containing game control buttons: Home, Save Game, Load Game, and New Game
 
 import javax.swing.*;
 import java.awt.*;
