@@ -8,6 +8,10 @@ import javax.imageio.ImageIO;
 public class StartScreen extends JFrame {
 
     private BufferedImage backgroundImage;
+    private Player player1;
+    private Player player2;
+    private GameController controller;
+    private boolean vsComputer;
 
     public StartScreen() {
         setTitle("Battleship - Start");
@@ -110,19 +114,82 @@ public class StartScreen extends JFrame {
         return button;
     }
 
-    private void startGame(boolean vsComputer) {
-        Player player1 = new HumanPlayer();
-        Player player2 = vsComputer ? new ComputerPlayer() : new HumanPlayer();
-
-        GameController controller = new GameController(player1, player2);
-        controller.setupGame();
-
+    private void startGame(boolean vsComp) {
+        this.vsComputer = vsComp;
+        this.dispose();
+        
+        player1 = new HumanPlayer();
+        player2 = vsComputer ? new ComputerPlayer() : new HumanPlayer();
+        controller = new GameController(player1, player2);
+        
+        // DON'T call setupGame() - we'll place ships manually
+        // controller.setupGame();
+        
+        // Start player 1 placement
+        showPlayer1Placement();
+    }
+    
+    private void showPlayer1Placement() {
+        ShipPlacementScreen placement1 = new ShipPlacementScreen(true, () -> {
+            // Store reference to the screen BEFORE it closes
+            ShipPlacementScreen currentScreen = null;
+            for (Window window : Window.getWindows()) {
+                if (window instanceof ShipPlacementScreen && window.isVisible()) {
+                    currentScreen = (ShipPlacementScreen) window;
+                    break;
+                }
+            }
+            
+            if (currentScreen != null) {
+                // Copy ships to player1
+                for (Ship s : currentScreen.getShips()) {
+                    player1.addShip(s);
+                    player1.getBoard().placeShip(s.getStartRow(), s.getStartCol(), 
+                        s.getLength(), s.isHorizontal());
+                }
+            }
+            
+            // Move to player 2 or start game
+            if (vsComputer) {
+                // Computer places ships automatically
+                player2.placeShipsAutomatically();
+                startGameWindow();
+            } else {
+                // Human player 2 places ships manually
+                showPlayer2Placement();
+            }
+        });
+    }
+    
+    private void showPlayer2Placement() {
+        ShipPlacementScreen placement2 = new ShipPlacementScreen(false, () -> {
+            // Store reference to the screen BEFORE it closes
+            ShipPlacementScreen currentScreen = null;
+            for (Window window : Window.getWindows()) {
+                if (window instanceof ShipPlacementScreen && window.isVisible()) {
+                    currentScreen = (ShipPlacementScreen) window;
+                    break;
+                }
+            }
+            
+            if (currentScreen != null) {
+                // Copy ships to player2
+                for (Ship s : currentScreen.getShips()) {
+                    player2.addShip(s);
+                    player2.getBoard().placeShip(s.getStartRow(), s.getStartCol(), 
+                        s.getLength(), s.isHorizontal());
+                }
+            }
+            
+            startGameWindow();
+        });
+    }
+    
+    private void startGameWindow() {
         SwingUtilities.invokeLater(() -> {
             GameWindow window = new GameWindow(controller);
             window.setVisible(true);
         });
-
-        this.dispose();
     }
 
     public static void main(String[] args) {

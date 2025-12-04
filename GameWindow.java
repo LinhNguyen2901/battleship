@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.util.*;
 import java.io.*;
@@ -448,14 +449,48 @@ public class GameWindow extends JFrame {
                         "OK"
                     );
 
-                    if (choice == 0) {
+                    if (choice == 0) 
+                    {
+                        if (controller.getCurrentPlayer() instanceof ComputerPlayer)
+                        {
+                            playComputerTurn();
+                        }
+                        else
+                        {
+                            showSwitchPlayerScreen();
+                        }
                         // Show switch player screen with button to continue
-                        showSwitchPlayerScreen();
                     }
                 }
             }
         }
 
+        private void playComputerTurn() {
+        // Disable opponent board during computer's turn
+        opponentBoardPanel.setEnabled(false);
+        
+        // Use SwingWorker or Timer to add a slight delay so player can see the transition
+        Timer timer = new Timer(1000, e -> {
+            String result = controller.takeTurn();
+            
+            // Update both boards
+            myBoardPanel.updateBoard();
+            opponentBoardPanel.updateBoard();
+            
+            if (result.equals("gameOver")) {
+                opponentBoardPanel.setEnabled(false);
+                updateStatus();
+                JOptionPane.showMessageDialog(GameWindow.this, 
+                    "Computer WINS!");
+            } else {
+                // Re-enable board for human player
+                opponentBoardPanel.setEnabled(true);
+                updateStatus();
+            }
+        });
+        timer.setRepeats(false);
+        timer.start();
+    }
         public void updateBoard() {
             Player current = controller.getCurrentPlayer();
             Player opponent = controller.getOpponent();
@@ -658,7 +693,7 @@ public class GameWindow extends JFrame {
 
     
 
-    public static void main(String[] args) {
+   /*  public static void main(String[] args) {
         Player p1 = new HumanPlayer();
         Player p2 = new HumanPlayer(); 
         GameController gc = new GameController(p1, p2);
@@ -668,5 +703,5 @@ public class GameWindow extends JFrame {
             GameWindow gw = new GameWindow(gc);
             gw.setVisible(true);
         });
-    }
+    }*/
 }

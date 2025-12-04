@@ -7,7 +7,7 @@ public class ComputerPlayer extends Player
     public int[] chooseShot(char [][] opponentBoard) // returns move
     {
         int row, col;
-        // looks for a hit
+        // looks for a hit (that's not destroyed)
         for (int r=0; r<10; r++)
         {
             for(int c=0; c<10; c++)
@@ -17,60 +17,43 @@ public class ComputerPlayer extends Player
                 {
                     row = r;
                     col = c;
-                    boolean invalidMove = true;
-                    while (invalidMove) // chooses randomly amoung above, below, left, and right
-                    {
-                    int option = rand.nextInt(4); // generate random number 0-3
-                    if(option==0) // chooses to shoot coordinate below the hit
-                    {
-                        if(row+1<10) // does not go out of bounds
-                        {
-                            row++;
-                        }
+                    
+                    // Try to find a valid adjacent cell
+                    List<int[]> validMoves = new ArrayList<>();
+                    
+                    // Check all 4 directions
+                    // Below
+                    if (row + 1 < 10 && opponentBoard[row + 1][col] == ' ') {
+                        validMoves.add(new int[]{row + 1, col});
                     }
-                    else if(option==1) // chooses to shoot coordinate above the hit
-                    {
-                        if(row-1 >=0)
-                        {
-                            row--;
-                        }
+                    // Above
+                    if (row - 1 >= 0 && opponentBoard[row - 1][col] == ' ') {
+                        validMoves.add(new int[]{row - 1, col});
                     }
-                    else if(option==2) // chooses to shoot coordinate to the left of the hit
-                    {
-                        if(col-1 >= 0)
-                        {
-                            col--;
-                        }
+                    // Right
+                    if (col + 1 < 10 && opponentBoard[row][col + 1] == ' ') {
+                        validMoves.add(new int[]{row, col + 1});
                     }
-                    else if(option==3) // chooses to shoot coordinate to the right of the hit
-                    {
-                        if(col+1<10)
-                        {
-                            col++;
-                        }
+                    // Left
+                    if (col - 1 >= 0 && opponentBoard[row][col - 1] == ' ') {
+                        validMoves.add(new int[]{row, col - 1});
                     }
-                    if (opponentBoard[row][col]==' ') // valid move is made if coordinate is empty (no hit or miss)
-                    {
-                            invalidMove = false;
+                    
+                    // If there are valid moves adjacent to this hit, pick one randomly
+                    if (!validMoves.isEmpty()) {
+                        int randomIndex = rand.nextInt(validMoves.size());
+                        return validMoves.get(randomIndex);
                     }
-                    else
-                    {
-                        // set row and column back if move was invalid
-                        row = r;
-                        col = c;
-                    }
-
-                    }
+                    // Otherwise, continue searching for another hit with available adjacent cells
                 }
             }
-
         }
  
-        // Otherwise, pick random cell
+        // No hits found or no valid adjacent cells, pick random cell
         do {
             row = rand.nextInt(Board.SIZE);      // generate random row
             col = rand.nextInt(Board.SIZE);      // generate random column
-        } while (opponentBoard[row][col] !=' '); //find empty cell
+        } while (opponentBoard[row][col] != ' '); //find empty cell
         return new int[]{row, col};               // return location
     }
 }
