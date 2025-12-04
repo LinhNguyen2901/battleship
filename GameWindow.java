@@ -7,7 +7,6 @@ import java.util.*;
 import java.io.*;
 
 public class GameWindow extends JFrame {
-
     private GameController controller;
     private BoardPanel myBoardPanel;      // Current player's ship board 
     private BoardPanel opponentBoardPanel; // Guess board
@@ -17,7 +16,6 @@ public class GameWindow extends JFrame {
     private JPanel boardsPanel;            // Reference to boards panel for overlay
     private JLabel myBoardLabel;
     private JLabel opponentBoardLabel;
-
     public GameWindow(GameController controller) {
         this.controller = controller;
         setTitle("Battleship Game");
