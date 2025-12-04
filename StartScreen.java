@@ -6,65 +6,56 @@ import java.io.File;
 import javax.imageio.ImageIO;
 
 public class StartScreen extends JFrame {
-    
+
     private BufferedImage backgroundImage;
 
     public StartScreen() {
         setTitle("Battleship - Start");
         setSize(1200, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // center screen
-        
-        // Load background image
+        setLocationRelativeTo(null);
+
         loadBackgroundImage();
-        
-        // Create main panel with background
+
         JPanel mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                
-                // Draw background image if loaded
+                g2d.setRenderingHint(
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+
                 if (backgroundImage != null) {
                     g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), null);
                 } else {
-                    // Fallback gradient if image not found
                     GradientPaint gradient = new GradientPaint(
-                        0, 0, new Color(20, 100, 180),
-                        getWidth(), getHeight(), new Color(10, 50, 100)
-                    );
+                            0, 0, new Color(20, 100, 180),
+                            getWidth(), getHeight(), new Color(10, 50, 100));
                     g2d.setPaint(gradient);
                     g2d.fillRect(0, 0, getWidth(), getHeight());
                 }
-                
-                // Add semi-transparent dark overlay
+
+                // semi-transparent overlay
                 g2d.setColor(new Color(0, 0, 0, 120));
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
+
         mainPanel.setLayout(new BorderLayout());
-        mainPanel.setOpaque(true);
-        
-        // Title panel
-        JPanel titlePanel = new JPanel(new BorderLayout());
-        titlePanel.setOpaque(false);
-        // Reduce top/bottom padding so subtitle sits closer to the buttons
-        titlePanel.setBorder(new EmptyBorder(20, 20, 10, 20));
-        
+
+        // Buttons container
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         buttonPanel.setOpaque(false);
-        // Use small horizontal insets; increase top inset so buttons sit lower on the window
         buttonPanel.setBorder(new EmptyBorder(60, 0, 80, 0));
 
         JButton humanButton = createStyledButton("Human vs Human", false);
         JButton computerButton = createStyledButton("Play vs Computer", true);
 
-        // Center buttons and limit maximum width so they don't stretch across the window
         humanButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         computerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         humanButton.setMaximumSize(new Dimension(360, 48));
         computerButton.setMaximumSize(new Dimension(360, 48));
 
@@ -74,26 +65,21 @@ public class StartScreen extends JFrame {
         buttonPanel.add(computerButton);
         buttonPanel.add(Box.createVerticalGlue());
 
-        // Place button panel in SOUTH so it appears lower on the screen
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-        
+
         setContentPane(mainPanel);
         setVisible(true);
     }
-    
+
     private void loadBackgroundImage() {
         try {
-            // Try to load image from common locations
             File imageFile = new File("images/battleship.jpg");
-            
             if (imageFile.exists()) {
                 backgroundImage = ImageIO.read(imageFile);
             }
-        } catch (Exception e) {
-            System.out.println("Could not load background image: " + e.getMessage());
-        }
+        } catch (Exception ignored) {}
     }
-    
+
     private JButton createStyledButton(String text, boolean vsComputer) {
         JButton button = new JButton(text) {
             @Override
@@ -105,25 +91,22 @@ public class StartScreen extends JFrame {
                 } else {
                     g.setColor(new Color(50, 150, 220));
                 }
-                // slightly smaller corner radius for compact buttons
                 g.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
-                
                 super.paintComponent(g);
             }
         };
-        
-        // Smaller font to make buttons visually compact
+
         button.setFont(new Font("Arial", Font.BOLD, 16));
         button.setForeground(Color.WHITE);
         button.setContentAreaFilled(false);
         button.setBorder(BorderFactory.createEmptyBorder());
-        // Prefer a smaller visual height/width for buttons
         button.setPreferredSize(new Dimension(300, 48));
         button.setMargin(new Insets(6, 12, 6, 12));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         button.addActionListener(e -> startGame(vsComputer));
-        
+
         return button;
     }
 
@@ -134,13 +117,11 @@ public class StartScreen extends JFrame {
         GameController controller = new GameController(player1, player2);
         controller.setupGame();
 
-        // Open the main game window
         SwingUtilities.invokeLater(() -> {
             GameWindow window = new GameWindow(controller);
             window.setVisible(true);
         });
 
-        // Close the start screen
         this.dispose();
     }
 
