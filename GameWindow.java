@@ -132,46 +132,7 @@ public class GameWindow extends JFrame {
         writer.println("PLAYER_" + playerNum + "_END");
     }
     
-    //helper function to load player information when load game
-    private void loadPlayerState(BufferedReader reader, Player player) throws IOException {
-        String line;
-        // Load ships
-        line = reader.readLine();
-        int shipsCount = Integer.parseInt(line.substring("SHIPS_COUNT:".length()));
-        for (int i = 0; i < shipsCount; i++) {
-            line = reader.readLine();
-            String[] parts = line.substring("SHIP:".length()).split(",");
-            int length = Integer.parseInt(parts[0]);
-            int row = Integer.parseInt(parts[1]);
-            int col = Integer.parseInt(parts[2]);
-            boolean horizontal = Boolean.parseBoolean(parts[3]);
-            int hits = Integer.parseInt(parts[4]);
-            // Place ship on board
-            player.getBoard().placeShip(row, col, length, horizontal);
-            Ship ship = new Ship(length, row, col, horizontal);
-            ship.setHits(hits);
-            player.addShip(ship);
-        }
-        // shipGrid
-        line = reader.readLine();
-        char[][] shipGrid = player.getBoard().getShipGrid();
-        for (int r = 0; r < 10; r++) {
-            line = reader.readLine();
-            for (int c = 0; c < 10; c++) {
-                shipGrid[r][c] = line.charAt(c);
-            }
-        }
-        //infoGrid
-        line = reader.readLine();
-        char[][] infoGrid = player.getBoard().getInfoGrid();
-        for (int r = 0; r < 10; r++) {
-            line = reader.readLine();
-            for (int c = 0; c < 10; c++) {
-                infoGrid[r][c] = line.charAt(c);
-            }
-        }
-        reader.readLine();
-    }
+
     
     //restart game
     private void restartGame() {
