@@ -303,6 +303,7 @@ public class GameWindow extends JFrame {
             int length = s.getLength();
             shipCounts.put(length, shipCounts.getOrDefault(length, 0) + 1);
         }
+        
         java.util.List<String> infoParts = new ArrayList<>();
         for (Map.Entry<Integer, Integer> entry : shipCounts.entrySet()) {
             infoParts.add(entry.getValue() + " ship of " + entry.getKey());
