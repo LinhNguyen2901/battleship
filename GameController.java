@@ -26,7 +26,7 @@ public class GameController implements Serializable
         if (move == null) {
             return "noMove";
         }
-        // Check win
+        opponent.getBoard().shoot(move[0], move[1], opponent.getShips());
         if (opponent.getBoard().allShipsSunk(opponent.getShips())) {
             return "gameOver";
         }

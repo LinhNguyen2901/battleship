@@ -326,9 +326,9 @@ private class ShipContainer extends JPanel
         setBackground(Color.WHITE);
         setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         // Rotate button at top
-        rotateBtn = new JButton("⟳");
+        rotateBtn = new JButton("rotate");
         rotateBtn.setFont(new Font("Arial", Font.BOLD, 16));
-        rotateBtn.setPreferredSize(new Dimension(40, 25));
+        rotateBtn.setPreferredSize(new Dimension(80, 25));
         rotateBtn.setMargin(new Insets(0, 0, 0, 0));
         rotateBtn.setFocusPainted(false);
         // Ship component in center
